@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "estatistics.h"
+#include "../include/estatistics.h"
 
 int main() {
     double numeros[] = {1, 2, 2, 3, 4};
