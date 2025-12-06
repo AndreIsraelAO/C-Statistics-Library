@@ -23,6 +23,7 @@ Calcula a moda de um array de números.
 **Parâmetros:** `double numeros[]`, `int tamanho`
 **Retorno:** `double` → moda
 
+## compilacao
 
-### Compilacao teste
+### Compilacao teste.c
 para rodar examples/testes.c use `gcc -I../include ../src/estatistics.c teste.c -o teste `
