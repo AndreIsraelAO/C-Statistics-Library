@@ -1,5 +1,5 @@
 #include<stdio.h>
-#include "estatistics.h"
+#include "../include/estatistics.h"
 
 double media(double numeros[], int tamanho){
     double soma = 0.0;
