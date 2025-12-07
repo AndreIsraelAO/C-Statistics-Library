@@ -69,7 +69,7 @@ int cstats_linear_regression_full(const double *x, const double *y, size_t size,
 
 ---
 
-## Instalação
+## Instalação (arch)
 
 Clone o repositório e compile:
 
