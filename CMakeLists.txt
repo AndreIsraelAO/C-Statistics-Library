@@ -64,8 +64,8 @@ install(
 if(STATS_BUILD_TESTS)
     enable_testing()
 
-    add_executable(cstats_tests tests/test_main.c src/cstats.c)
-
+    # Only the test source file(s) go into the executable — link with the cstats target
+    add_executable(cstats_tests tests/test_main.c)
     target_link_libraries(cstats_tests PRIVATE cstats)
 
     add_test(NAME cstats_tests COMMAND cstats_tests)
