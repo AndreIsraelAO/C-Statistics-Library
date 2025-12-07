@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <math.h>
-#include "statistics.h"
+#include "cstats.h"
 
 int main(void) {
     double data[] = {1, 2, 2, 3, 4, 5, 5, 5, 6};
