@@ -16,8 +16,8 @@ Ela fornece funções para **médias, medianas, moda, quantis, variância, desvi
 
 ---
 
-##Funções Disponíveis
-###Médias e Moda
+## Funções Disponíveis
+### Médias e Moda
 
 double cstats_mean(const double *data, size_t size) – Média aritmética
 
@@ -29,7 +29,7 @@ double cstats_mode(const double *data, size_t size) – Moda
 
 int cstats_multimode(const double *data, size_t size, double *modes, size_t max_modes) – Todas as modas
 
-###Medianas
+### Medianas
 
 double cstats_median(const double *data, size_t size) – Mediana
 
@@ -39,13 +39,13 @@ double cstats_median_high(const double *data, size_t size) – Mediana alta
 
 double cstats_median_grouped(const double *data, size_t size, double interval) – Mediana agrupada
 
-###Quantis
+### Quantis
 
 double cstats_quantile(const double *data, size_t size, double quantile) – Quantil único
 
 int cstats_quantiles(const double *data, size_t size, const double *q, size_t q_count, double *result) – Quantis múltiplos
 
-###Variância e Desvio Padrão
+### Variância e Desvio Padrão
 
 double cstats_variance(const double *data, size_t size) – Variância amostral
 
@@ -55,17 +55,19 @@ double cstats_stdev(const double *data, size_t size) – Desvio padrão amostral
 
 double cstats_pstdev(const double *data, size_t size) – Desvio padrão populacional
 
-###Covariância e Correlação
+### Covariância e Correlação
 
 double cstats_covariance(const double *x, const double *y, size_t size) – Covariância amostral
 
 double cstats_correlation(const double *x, const double *y, size_t size) – Correlação de Pearson
 
-###Regressão Linear
+### Regressão Linear
 
 int cstats_linear_regression(const double *x, const double *y, size_t size, double *slope, double *intercept) – Regressão linear simples
 
 int cstats_linear_regression_full(const double *x, const double *y, size_t size, double *slope, double *intercept, double *r_squared, double *residual_variance) – Regressão linear com métricas completas
+
+---
 
 ## Instalação
 
