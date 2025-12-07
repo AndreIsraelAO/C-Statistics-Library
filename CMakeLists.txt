@@ -28,7 +28,12 @@ else()
     add_library(cstats STATIC src/cstats.c)
 endif()
 
-target_include_directories(cstats PUBLIC include)
+# Corrige problema de INTERFACE_INCLUDE_DIRECTORIES
+target_include_directories(cstats
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+)
 
 ########################
 # Installation section #
