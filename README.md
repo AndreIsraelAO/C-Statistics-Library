@@ -59,7 +59,7 @@ Bash
 makepkg -si
 ```
 
-⚡ Quick Start
+#⚡ Quick Start
 
 Aqui está um exemplo completo de como usar a biblioteca no seu projeto.
 
@@ -91,7 +91,7 @@ Compilando o exemplo:
 gcc main.c -o stats_app -lcstats -lm
 ./stats_app
 ```
-📚 Funcionalidades e API
+#📚 Funcionalidades e API
 
 A biblioteca cobre as principais métricas de estatística descritiva.
 Categoria	Funções Disponíveis	Complexidade
@@ -102,9 +102,7 @@ Regressão	linear_regression (Slope, Intercept, R²)	O(n)
 
 *Mediana e modas podem exigir ordenação interna dependendo da implementação.
 
-    Para documentação detalhada de cada função, consulte a pasta docs/ ou os headers em include/.
-
-🤝 Contribuindo
+#🤝 Contribuindo
 
 Contribuições são bem-vindas! Se você encontrou um bug ou quer melhorar a performance:
 
@@ -120,10 +118,10 @@ Contribuições são bem-vindas! Se você encontrou um bug ou quer melhorar a pe
 
     Abra um Pull Request.
 
-📄 Licença
+#📄 Licença
 
 Este projeto está licenciado sob a Licença MIT - veja o arquivo LICENSE para detalhes.
 
 <p align="center"> Desenvolvido com 💙 e C por <a href="https://www.google.com/search?q=https://github.com/AndreIsraelAO">André Israel</a> </p>
-sudo make install
+
 
