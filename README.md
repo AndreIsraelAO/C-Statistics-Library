@@ -31,16 +31,23 @@ Focada em **determinismo e robustez**, ela trata `NaN`s e erros de entrada nativ
 ```bash
 git clone [https://github.com/AndreIsraelAO/C-Statistics-Library.git](https://github.com/AndreIsraelAO/C-Statistics-Library.git)
 cd C-Statistics-Library
+```
 
 # Cria o diretório de build
+```
 mkdir build && cd build
+```
 
 # Configura e compila (Release para otimização máxima)
+```
 cmake -DCMAKE_BUILD_TYPE=Release ..
 make
+```
 
 # Instalação (Opcional)
+```
 sudo make install
+```
 
 Para usuários Arch Linux
 
@@ -48,15 +55,15 @@ Se você (como eu) usa Arch, pode gerar e usar o pacote diretamente (adicione o 
 Bash
 
 # Exemplo se você criar um PKGBUILD no futuro
+```
 makepkg -si
+```
 
 ⚡ Quick Start
 
 Aqui está um exemplo completo de como usar a biblioteca no seu projeto.
 
-main.c
-C
-
+```
 #include <stdio.h>
 #include <cstats.h> // Header principal
 
@@ -77,13 +84,13 @@ int main() {
 
     return 0;
 }
-
+```
 Compilando o exemplo:
-Bash
+```
 
 gcc main.c -o stats_app -lcstats -lm
 ./stats_app
-
+```
 📚 Funcionalidades e API
 
 A biblioteca cobre as principais métricas de estatística descritiva.
