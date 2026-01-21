@@ -1,127 +1,150 @@
-# C-Statistics-Library
+C-Statistics-Library
 
-![Language](https://img.shields.io/badge/language-C11-blue.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
-![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg) ![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows%20%7C%20macOS-lightgrey)
+A C library for descriptive statistical calculations.
+Provides simple, efficient, and portable functions for basic statistical metrics in C/C++ projects.
 
-**CStatisticsLibrary** é uma biblioteca de estatística descritiva em C (C11), projetada para ser **simples, performática e segura**.
+📌 Overview
 
-Focada em **determinismo e robustez**, ela trata `NaN`s e erros de entrada nativamente, sendo ideal para sistemas embarcados, kernels ou como backend matemático para linguagens de alto nível (Python, Rust, Go) via FFI.
+C-Statistics-Library is a C11-compatible library that implements common descriptive statistics without external dependencies. It is designed to be easily integrated into:
 
----
+Native C/C++ applications
 
-## 🚀 Destaques
+Embedded systems
 
-- **Zero Dependências:** Código C puro, sem bibliotecas externas.
-- **Alta Performance:** Algoritmos otimizados com complexidade **O(n)** para a maioria das operações.
-- **Safety First:** Tratamento robusto de erros (retorna `NAN` ou códigos de erro específicos).
-- **FFI-Ready:** Estrutura de memória simples, facilitando *bindings* para outras linguagens.
-- **Portável:** Compatível com C e C++, testado em GCC e Clang.
+Mathematical backends exposed to other languages via FFI
 
----
+The library focuses on simplicity, performance, and robustness, including validation for invalid inputs and NaN handling.
 
-## 📦 Instalação
+⚙️ Features
 
-### Pré-requisitos
-* Compilador C (GCC ou Clang)
-* CMake 3.10+
+The library provides calculations for:
 
-### Compilando do código fonte (Universal)
+📊 Measures of Central Tendency
 
-```bash
-git clone [https://github.com/AndreIsraelAO/C-Statistics-Library.git](https://github.com/AndreIsraelAO/C-Statistics-Library.git)
+Arithmetic mean
+
+Geometric mean
+
+Harmonic mean
+
+Median
+
+Mode
+
+📈 Measures of Dispersion
+
+Variance
+
+Standard deviation (population and sample)
+
+Range
+
+Quantiles
+
+🔗 Correlation and Regression
+
+Covariance
+
+Pearson correlation coefficient
+
+Linear regression (slope, intercept, and 
+R2
+R
+2
+)
+
+Most functions run in O(n) time, except when sorting is required (e.g., median or mode).
+
+📦 Installation
+Requirements
+
+C11-compatible compiler (GCC, Clang)
+
+CMake 3.10+
+
+Build instructions
+git clone https://github.com/AndreIsraelAO/C-Statistics-Library.git
 cd C-Statistics-Library
-```
 
-## Cria o diretório de build
-```
 mkdir build && cd build
-```
-
-## Configura e compila (Release para otimização máxima)
-```
 cmake -DCMAKE_BUILD_TYPE=Release ..
 make
-```
 
-## Instalação (Opcional)
-```
+
+Optional system-wide installation:
+
 sudo make install
-```
 
-Para usuários Arch Linux
-
-Se você (como eu) usa Arch, pode gerar e usar o pacote diretamente (adicione o PKGBUILD se tiver):
-Bash
-
-## Exemplo se você criar um PKGBUILD no futuro
-```
-makepkg -si
-```
-
-## ⚡ Quick Start
-
-Aqui está um exemplo completo de como usar a biblioteca no seu projeto.
-
-```
+🚀 Quick Start
+Basic example
 #include <stdio.h>
-#include <cstats.h> // Header principal
+#include <cstats.h>
 
 int main() {
-    // Dataset de exemplo
-    double dados[] = {10.5, 20.0, 45.2, 12.8, 10.5};
-    size_t tamanho = sizeof(dados) / sizeof(dados[0]);
+    double data[] = {10.5, 20.0, 45.2, 12.8, 10.5};
+    size_t n = sizeof(data) / sizeof(data[0]);
 
-    // Cálculo de média
-    double media = cstats_mean(dados, tamanho);
-    
-    // Cálculo de desvio padrão populacional
-    double desvio = cstats_pstdev(dados, tamanho);
+    double mean = cstats_mean(data, n);
+    double stdev = cstats_pstdev(data, n);
 
-    printf("Dataset Size: %zu\n", tamanho);
-    printf("Média: %.4f\n", media);
-    printf("Desvio Padrão (Pop): %.4f\n", desvio);
+    printf("Size: %zu\n", n);
+    printf("Mean: %.4f\n", mean);
+    printf("Standard Deviation: %.4f\n", stdev);
 
     return 0;
 }
-```
-Compilando o exemplo:
-```
 
+Compile and run
 gcc main.c -o stats_app -lcstats -lm
 ./stats_app
-```
-## 📚 Funcionalidades e API
 
-A biblioteca cobre as principais métricas de estatística descritiva.
-Categoria	Funções Disponíveis	Complexidade
-Centralidade	mean, geometric_mean, harmonic_mean, median, mode	O(n) / O(n log n)*
-Dispersão	variance, stdev, range, quantiles	O(n)
-Correlação	covariance, correlation (Pearson)	O(n)
-Regressão	linear_regression (Slope, Intercept, R²)	O(n)
+📘 Main API
+Function	Description
+cstats_mean	Arithmetic mean
+cstats_median	Median
+cstats_mode	Mode
+cstats_variance	Variance
+cstats_stdev	Standard deviation
+cstats_covariance	Covariance
+cstats_correlation	Pearson correlation
+cstats_linear_regression	Linear regression
 
-*Mediana e modas podem exigir ordenação interna dependendo da implementação.
+See the header file (include/cstats.h) for the complete API and function signatures.
 
-## 🤝 Contribuindo
+🧪 Tests
 
-Contribuições são bem-vindas! Se você encontrou um bug ou quer melhorar a performance:
+Unit tests are available in the tests/ directory. To run them:
 
-    Leia nosso Guia de Contribuição.
+cd build
+ctest
 
-    Faça um fork do projeto.
+🤝 Contributing
 
-    Crie sua Feature Branch (git checkout -b feature/NovaFeature).
+Contributions are welcome. Suggested workflow:
 
-    Commit suas mudanças (git commit -m 'Add some NovaFeature').
+Fork the repository
 
-    Dê push para a branch (git push origin feature/NovaFeature).
+Create a feature branch:
+git checkout -b feature/new-feature
 
-    Abra um Pull Request.
+Commit your changes
 
-## 📄 Licença
+Open a Pull Request
 
-Este projeto está licenciado sob a Licença MIT - veja o arquivo LICENSE para detalhes.
+Please follow the project’s coding style and ensure all tests pass.
 
-<p align="center"> Desenvolvido com 💙 e C por <a href="https://www.google.com/search?q=https://github.com/AndreIsraelAO">André Israel</a> </p>
+📄 License
 
+Distributed under the MIT License. See the LICENSE file for more information.
 
+🧠 Recommendations for Improvement
+
+To further professionalize the project:
+
+Add usage examples or demos
+
+Document all functions using Doxygen comments
+
+Include CI badges (build status, test coverage)
+
+Publish versioned releases with a clear changelog
