@@ -33,18 +33,18 @@ git clone [https://github.com/AndreIsraelAO/C-Statistics-Library.git](https://gi
 cd C-Statistics-Library
 ```
 
-# Cria o diretório de build
+## Cria o diretório de build
 ```
 mkdir build && cd build
 ```
 
-# Configura e compila (Release para otimização máxima)
+## Configura e compila (Release para otimização máxima)
 ```
 cmake -DCMAKE_BUILD_TYPE=Release ..
 make
 ```
 
-# Instalação (Opcional)
+## Instalação (Opcional)
 ```
 sudo make install
 ```
@@ -54,12 +54,12 @@ Para usuários Arch Linux
 Se você (como eu) usa Arch, pode gerar e usar o pacote diretamente (adicione o PKGBUILD se tiver):
 Bash
 
-# Exemplo se você criar um PKGBUILD no futuro
+## Exemplo se você criar um PKGBUILD no futuro
 ```
 makepkg -si
 ```
 
-#⚡ Quick Start
+## ⚡ Quick Start
 
 Aqui está um exemplo completo de como usar a biblioteca no seu projeto.
 
@@ -91,7 +91,7 @@ Compilando o exemplo:
 gcc main.c -o stats_app -lcstats -lm
 ./stats_app
 ```
-#📚 Funcionalidades e API
+## 📚 Funcionalidades e API
 
 A biblioteca cobre as principais métricas de estatística descritiva.
 Categoria	Funções Disponíveis	Complexidade
@@ -102,7 +102,7 @@ Regressão	linear_regression (Slope, Intercept, R²)	O(n)
 
 *Mediana e modas podem exigir ordenação interna dependendo da implementação.
 
-#🤝 Contribuindo
+## 🤝 Contribuindo
 
 Contribuições são bem-vindas! Se você encontrou um bug ou quer melhorar a performance:
 
@@ -118,7 +118,7 @@ Contribuições são bem-vindas! Se você encontrou um bug ou quer melhorar a pe
 
     Abra um Pull Request.
 
-#📄 Licença
+## 📄 Licença
 
 Este projeto está licenciado sob a Licença MIT - veja o arquivo LICENSE para detalhes.
 
