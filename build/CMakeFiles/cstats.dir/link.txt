@@ -1,0 +1,2 @@
+/usr/bin/ar qc libcstats.a CMakeFiles/cstats.dir/src/cstats.c.o CMakeFiles/cstats.dir/src/stats.c.o
+/usr/bin/ranlib libcstats.a

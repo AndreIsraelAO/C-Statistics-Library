@@ -26,6 +26,23 @@ extern "C" {
 typedef struct StatSeries StatSeries;
 
 /* =========================================================================
+ * RESULT STRUCTURE
+ * ========================================================================= */
+
+/**
+ * StatsResult - Bundled statistical results.
+ * Contains mean, variance, standard deviation, min, max, and count.
+ */
+typedef struct {
+    float mean;
+    float variance;
+    float std_dev;
+    float min;
+    float max;
+    size_t count;
+} StatsResult;
+
+/* =========================================================================
  * LIFECYCLE FUNCTIONS
  * ========================================================================= */
 
