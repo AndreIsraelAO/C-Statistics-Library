@@ -1,1 +1,25 @@
-Nothing should be ignored in this case, as only a header file (`include/stats.h`) was modified and there are no build artifacts, dependencies, or temporary files in the changes.
+```
+# Build artifacts and compiled files
+*.o
+*.a
+*.exe
+*.dll
+*.so
+*.obj
+*.out
+build/
+dist/
+
+# CMake files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+Makefile
+
+# Temporary and output files
+*.bin
+*.log
+*.tmp
+a.out
+```
