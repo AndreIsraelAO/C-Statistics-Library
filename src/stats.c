@@ -3,6 +3,26 @@
  * =========================================================================
  * This file implements the internal structure and lifecycle functions for
  * the StatSeries opaque data type.
+ * 
+ * NUMERICAL STABILITY NOTE:
+ * For future statistical computations, this library uses Welford's online
+ * algorithm for computing variance and standard deviation in a single pass.
+ * 
+ * Welford's Algorithm (single-pass variance computation):
+ * ---------------------------------------------------------
+ * Traditional two-pass variance: var = Σ(x - mean)² / (n-1)
+ * Problem: Subtracting similar large numbers causes catastrophic cancellation.
+ * 
+ * Welford's solution - incremental update for each new value x:
+ *   delta = x - mean_old
+ *   mean_new = mean_old + delta / n
+ *   M2_new = M2_old + delta * (x - mean_new)
+ *   variance = M2 / (n - 1)
+ * 
+ * Benefits:
+ *   1. Single pass through data (O(n) time, O(1) extra space)
+ *   2. Numerically stable - no subtraction of large similar numbers
+ *   3. Suitable for streaming data - can update incrementally
  */
 
 #include "stats.h"
