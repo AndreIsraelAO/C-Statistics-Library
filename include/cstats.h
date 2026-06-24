@@ -2,8 +2,9 @@
 #define CSTATISTICS_STATISTICS_H
 
 /**
- * CStatisticsLibrary — Biblioteca de Estatística em C
- * ----------------------------------------------------
+ * @file cstats.h
+ * @brief CStatisticsLibrary — Biblioteca de Estatística em C
+ * 
  * Este arquivo define a API pública e estável da biblioteca.
  * As funções aqui declaradas são projetadas para serem:
  *   - Simples de usar
@@ -12,211 +13,264 @@
  *   - Documentadas para facilitar manutenção futura
  */
 
-#include <stddef.h>  // para size_t
+#include <stddef.h>  /* para size_t */
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* =========================================================================
+/* ============================================================================
  * MÉTRICAS BÁSICAS
- * ========================================================================= */
+ * ============================================================================ */
 
 /**
- * Calcula a média aritmética.
- * Retorna NaN se size == 0.
+ * @brief Calcula a média aritmética.
+ * @param data  Ponteiro para os dados
+ * @param size  Número de elementos
+ * @return Média aritmética ou NaN se size == 0
  */
 double cstats_mean(const double *data, size_t size);
 
 /**
- * Calcula a moda (valor mais frequente).
- * Se houver múltiplas modas, retorna a primeira em ordem crescente.
- * Retorna NaN se size == 0.
+ * @brief Calcula a moda (valor mais frequente).
+ * @param data  Ponteiro para os dados
+ * @param size  Número de elementos
+ * @return Moda ou NaN se size == 0
+ * 
+ * @note Se houver múltiplas modas, retorna a primeira em ordem crescente.
  */
 double cstats_mode(const double *data, size_t size);
 
 /**
- * Calcula todas as modas (multimode) de um array.
- *
- * param data      Ponteiro para os dados
- * param size      Número de elementos
- * param modes     Ponteiro para array que receberá as modas
- * param max_modes Tamanho máximo do array modes
- *
- * return Número de modas encontradas, ou -1 em caso de erro (size==0)
+ * @brief Calcula todas as modas (multimode) de um array.
+ * @param data       Ponteiro para os dados
+ * @param size       Número de elementos
+ * @param modes      Ponteiro para array que receberá as modas
+ * @param max_modes  Tamanho máximo do array modes
+ * @return Número de modas encontradas, ou -1 em caso de erro
  */
-int cstats_multimode(const double *data, size_t size, double *modes, size_t max_modes);
-
+int cstats_multimode(const double *data, size_t size, 
+                     double *modes, size_t max_modes);
 
 /**
- * Calcula a mediana.
- * Retorna NaN se size == 0.
+ * @brief Calcula a mediana.
+ * @param data  Ponteiro para os dados
+ * @param size  Número de elementos
+ * @return Mediana ou NaN se size == 0
  */
 double cstats_median(const double *data, size_t size);
 
 
-/* =========================================================================
+/* ============================================================================
  * MÉDIAS VARIADAS
- * ========================================================================= */
+ * ============================================================================ */
 
 /**
- * Média harmônica:
- *   n / (Σ 1/x_i)
- * Requer que todos os elementos sejam > 0.
- * Retorna NaN se algum valor for <= 0.
+ * @brief Calcula a média harmônica.
+ * @param data  Ponteiro para os dados
+ * @param size  Número de elementos
+ * @return Média harmônica ou NaN se algum valor for <= 0
+ * 
+ * Fórmula: n / (Σ 1/x_i)
+ * @note Requer que todos os elementos sejam > 0.
  */
 double cstats_harmonic_mean(const double *data, size_t size);
 
 /**
- * Média geométrica:
- *   (Π x_i)^(1/n)
- * Requer que todos os elementos sejam > 0.
- * Retorna NaN se algum valor for <= 0.
+ * @brief Calcula a média geométrica.
+ * @param data  Ponteiro para os dados
+ * @param size  Número de elementos
+ * @return Média geométrica ou NaN se algum valor for <= 0
+ * 
+ * Fórmula: (Π x_i)^(1/n)
+ * @note Requer que todos os elementos sejam > 0.
  */
 double cstats_geometric_mean(const double *data, size_t size);
 
 
-/* =========================================================================
+/* ============================================================================
  * MEDIANAS ESPECIALIZADAS
- * ========================================================================= */
+ * ============================================================================ */
 
 /**
- * Mediana baixa:
+ * @brief Calcula a mediana baixa.
+ * @param data  Ponteiro para os dados
+ * @param size  Número de elementos
+ * @return Mediana baixa ou NaN se size == 0
+ * 
  * Em caso de número par de elementos, retorna o valor inferior do par central.
  * Ex.: [1, 2, 3, 4] → median_low = 2
  */
 double cstats_median_low(const double *data, size_t size);
 
 /**
- * Mediana alta:
+ * @brief Calcula a mediana alta.
+ * @param data  Ponteiro para os dados
+ * @param size  Número de elementos
+ * @return Mediana alta ou NaN se size == 0
+ * 
  * Em caso de número par de elementos, retorna o valor superior do par central.
  * Ex.: [1, 2, 3, 4] → median_high = 3
  */
 double cstats_median_high(const double *data, size_t size);
 
 /**
- * Mediana agrupada (grouped median).
- * Segue o comportamento de statistics.median_grouped do Python.
- *     median = L + h * ((n/2 - cf) / f)
- *
- * interval define o tamanho do grupo (ex.: 1.0 para números inteiros).
- * Retorna NaN em caso de size == 0.
+ * @brief Calcula a mediana agrupada (grouped median).
+ * @param data      Ponteiro para os dados
+ * @param size      Número de elementos
+ * @param interval  Tamanho do grupo (ex.: 1.0 para números inteiros)
+ * @return Mediana agrupada ou NaN se size == 0
+ * 
+ * Fórmula: median = L + h * ((n/2 - cf) / f)
+ * @note Segue o comportamento de statistics.median_grouped do Python.
  */
 double cstats_median_grouped(const double *data, size_t size,
                              double interval);
 
-/* =========================================================================
+
+/* ============================================================================
  * QUANTIS
- * ========================================================================= */
+ * ============================================================================ */
 
 /**
- * Calcula quantis arbitrários.
+ * @brief Calcula quantis arbitrários.
+ * @param data      Ponteiro para os dados
+ * @param size      Número de elementos
+ * @param quantile  Valor entre 0.0 e 1.0
+ * @return Quantil calculado ou NaN em caso de erro
  * 
- * quantile ∈ [0.0, 1.0]
- * 
- * Exemplo:
- *   q=0.5 → mediana
- *   q=0.25 → Q1
- *   q=0.75 → Q3
- *
- * Retorna NaN se size == 0 ou se quantile estiver fora dos limites.
+ * Exemplos:
+ *   - q = 0.5  → mediana
+ *   - q = 0.25 → Q1 (primeiro quartil)
+ *   - q = 0.75 → Q3 (terceiro quartil)
  */
 double cstats_quantile(const double *data, size_t size, double quantile);
 
 /**
- * Atalho para múltiplos quantis ao mesmo tempo.
+ * @brief Calcula múltiplos quantis ao mesmo tempo.
+ * @param data     Ponteiro para os dados
+ * @param size     Número de elementos
+ * @param q        Array de quantis desejados
+ * @param q_count  Quantidade de quantis no array q
+ * @param result   Array que receberá os resultados
+ * @return 0 em sucesso, -1 em erro
  * 
  * Exemplo: q = {0.25, 0.5, 0.75}
- * 
- * result[] deve ter o mesmo tamanho de q_count.
- * 
- * Retorna 0 em sucesso, -1 em erro.
+ * @note result[] deve ter o mesmo tamanho de q_count.
  */
 int cstats_quantiles(const double *data, size_t size,
                      const double *q, size_t q_count,
                      double *result);
 
 
-/* =========================================================================
+/* ============================================================================
  * VARIÂNCIA E DESVIO PADRÃO
- * ========================================================================= */
+ * ============================================================================ */
 
 /**
- * Variância amostral (sample variance).
- * Formula: Σ (x - mean)^2 / (n - 1)
- * Requer n >= 2. Retorna NaN caso contrário.
+ * @brief Calcula a variância amostral.
+ * @param data  Ponteiro para os dados
+ * @param size  Número de elementos
+ * @return Variância amostral ou NaN se size < 2
+ * 
+ * Fórmula: Σ (x - mean)² / (n - 1)
  */
 double cstats_variance(const double *data, size_t size);
 
 /**
- * Variância populacional.
- * Formula: Σ (x - mean)^2 / n
- * Requer n >= 1.
+ * @brief Calcula a variância populacional.
+ * @param data  Ponteiro para os dados
+ * @param size  Número de elementos
+ * @return Variância populacional ou NaN se size < 1
+ * 
+ * Fórmula: Σ (x - mean)² / n
  */
 double cstats_pvariance(const double *data, size_t size);
 
 /**
- * Desvio padrão amostral (sample standard deviation).
- * Igual a sqrt(variance).
+ * @brief Calcula o desvio padrão amostral.
+ * @param data  Ponteiro para os dados
+ * @param size  Número de elementos
+ * @return Desvio padrão amostral ou NaN se size < 2
+ * 
+ * Fórmula: sqrt(variance)
  */
 double cstats_stdev(const double *data, size_t size);
 
 /**
- * Desvio padrão populacional.
- * Igual a sqrt(pvariance).
+ * @brief Calcula o desvio padrão populacional.
+ * @param data  Ponteiro para os dados
+ * @param size  Número de elementos
+ * @return Desvio padrão populacional ou NaN se size < 1
+ * 
+ * Fórmula: sqrt(pvariance)
  */
 double cstats_pstdev(const double *data, size_t size);
 
 
-/* =========================================================================
+/* ============================================================================
  * COVARIÂNCIA E CORRELAÇÃO
- * ========================================================================= */
+ * ============================================================================ */
 
 /**
- * Covariância amostral entre dois vetores.
- * Formula: Σ (xi - mean_x)*(yi - mean_y) / (n - 1)
- * Requer n >= 2.
+ * @brief Calcula a covariância amostral entre dois vetores.
+ * @param x     Ponteiro para o primeiro vetor
+ * @param y     Ponteiro para o segundo vetor
+ * @param size  Número de elementos
+ * @return Covariância amostral ou NaN se size < 2
+ * 
+ * Fórmula: Σ (xi - mean_x)(yi - mean_y) / (n - 1)
  */
 double cstats_covariance(const double *x, const double *y, size_t size);
 
 /**
- * Correlação de Pearson entre dois vetores.
- * Formula: cov(x, y) / (stdev(x) * stdev(y))
- * Retorna NaN se variâncias forem zero.
+ * @brief Calcula a correlação de Pearson entre dois vetores.
+ * @param x     Ponteiro para o primeiro vetor
+ * @param y     Ponteiro para o segundo vetor
+ * @param size  Número de elementos
+ * @return Coeficiente de correlação ou NaN se variâncias forem zero
+ * 
+ * Fórmula: cov(x, y) / (stdev(x) * stdev(y))
  */
 double cstats_correlation(const double *x, const double *y, size_t size);
 
 
-/* =========================================================================
+/* ============================================================================
  * REGRESSÃO LINEAR
- * ========================================================================= */
+ * ============================================================================ */
 
 /**
- * Regressão linear simples (modelo: y = a*x + b)
- *
- * Retorna:
- *   a → coeficiente angular (slope)
- *   b → intercepto (intercept)
- *
- * Exige size >= 2.
- * Retorna 0 em sucesso, -1 em erro.
+ * @brief Realiza regressão linear simples (modelo: y = a*x + b).
+ * @param x          Ponteiro para o vetor independente
+ * @param y          Ponteiro para o vetor dependente
+ * @param size       Número de elementos
+ * @param slope      Ponteiro para receber o coeficiente angular (a)
+ * @param intercept  Ponteiro para receber o intercepto (b)
+ * @return 0 em sucesso, -1 em erro
+ * 
+ * @note Exige size >= 2.
  */
 int cstats_linear_regression(const double *x, const double *y, size_t size,
                              double *slope, double *intercept);
 
 /**
- * Regressão linear com métricas extras.
- *
+ * @brief Realiza regressão linear com métricas extras.
+ * @param x                 Ponteiro para o vetor independente
+ * @param y                 Ponteiro para o vetor dependente
+ * @param size              Número de elementos
+ * @param slope             Ponteiro para receber o coeficiente angular (opcional)
+ * @param intercept         Ponteiro para receber o intercepto (opcional)
+ * @param r_squared         Ponteiro para receber R² (opcional)
+ * @param residual_variance Ponteiro para receber variância dos resíduos (opcional)
+ * @return 0 em sucesso, -1 em erro
+ * 
  * Calcula:
- *   - slope
- *   - intercept
- *   - r²  (coeficiente de determinação)
- *   - var_residuals  (variância dos erros)
- *
- * Qualquer ponteiro NULL é ignorado.
- * size >= 2 é obrigatório.
- *
- * Retorna 0 em sucesso, -1 em erro.
+ *   - slope (coeficiente angular)
+ *   - intercept (intercepto)
+ *   - r² (coeficiente de determinação)
+ *   - var_residuals (variância dos erros)
+ * 
+ * @note Qualquer ponteiro NULL é ignorado. Exige size >= 2.
  */
 int cstats_linear_regression_full(const double *x, const double *y, size_t size,
                                   double *slope,
@@ -229,4 +283,4 @@ int cstats_linear_regression_full(const double *x, const double *y, size_t size,
 }
 #endif
 
-#endif // CSTATISTICS_STATISTICS_H
+#endif /* CSTATISTICS_STATISTICS_H */
