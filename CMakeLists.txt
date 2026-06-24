@@ -23,9 +23,9 @@ include(cmake/compiler_warnings.cmake)
 
 # Library type based on option
 if(STATS_BUILD_SHARED)
-    add_library(cstats SHARED src/cstats.c)
+    add_library(cstats SHARED src/cstats.c src/stats.c)
 else()
-    add_library(cstats STATIC src/cstats.c)
+    add_library(cstats STATIC src/cstats.c src/stats.c)
 endif()
 
 # Corrige problema de INTERFACE_INCLUDE_DIRECTORIES
