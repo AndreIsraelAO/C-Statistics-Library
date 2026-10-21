@@ -7,7 +7,7 @@
 
 A small statistics library for C11 with no dependencies beyond the C standard library. The API is modeled on Python's `statistics` module, and the test suite checks results against reference values computed with it.
 
-> **Status:** early-stage personal project (v0.1.0). It has unit tests and CI, but **no benchmarks** and no known production use. Performance has not been measured.
+> **Status:** early-stage personal project (v0.1.0). It has unit tests and CI, plus a small [micro-benchmark](#benchmarks) measured on a single machine. There is no known production use.
 
 ## Features
 
@@ -98,13 +98,38 @@ target_link_libraries(my_app PRIVATE cstats::cstats)
 - GitHub Actions builds with warnings as errors (`-Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion`, or `/W4` on MSVC) on Linux (GCC, Clang), macOS (Clang) and Windows (MSVC), and runs one job under AddressSanitizer and UBSan.
 - Locally verified with GCC (MinGW) and Clang on Windows; `find_package(cstats)` was checked with a separate consumer project.
 
+## Benchmarks
+
+`bench/bench.c` times each function on pseudo-random data (best of 5 runs). Build and run it with:
+
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DSTATS_BUILD_BENCH=ON
+cmake --build build
+./build/cstats_bench 1000000
+```
+
+One run on a Windows machine, GCC 16.2 (MinGW-w64, `-O3`), n = 1,000,000 (`clock()` has about 1 ms resolution here, so the small values are approximate):
+
+| Function | Time |
+| :--- | ---: |
+| `mean` | ~1 ms |
+| `variance` | ~2 ms |
+| `correlation` (Pearson) | ~2 ms |
+| `median` (sorts a copy) | ~275 ms |
+| `quantile` (sorts a copy) | ~263 ms |
+| `mad` (two sorts) | ~548 ms |
+| `spearman` (n = 100,000) | ~54 ms |
+| accumulator `add` × n + `stdev` | ~16 ms |
+
+These numbers come from one machine and one compiler; they are meant to show relative cost, not absolute speed. The main takeaway: anything that sorts is roughly two orders of magnitude slower than a single pass, so `median` and `quantile` would benefit from a selection algorithm (see below).
+
 ## Known limitations and roadmap
 
 - No hypothesis tests (t-test, chi-square, Kolmogorov–Smirnov) or confidence intervals yet; they need the incomplete gamma/beta functions and the Student's t distribution.
 - Median and quantiles sort the whole array; a selection algorithm (quickselect) would make them O(n).
 - Error causes are not distinguishable (`NAN` covers invalid input and allocation failure).
 - Only `double` is supported.
-- Planned: histograms and moving averages, `zscore`, compensated summation, benchmarks, Python bindings.
+- Planned: histograms and moving averages, `zscore`, compensated summation, Python bindings.
 
 ## Project layout
 
@@ -112,6 +137,7 @@ target_link_libraries(my_app PRIVATE cstats::cstats)
 include/cstats.h        public API and documentation
 src/cstats.c            implementation
 tests/test_main.c       test runner
+bench/bench.c           micro-benchmark (optional target)
 cmake/                  warning flags helper
 .github/workflows/      CI
 ```
