@@ -555,3 +555,135 @@ int cstats_linear_regression_full(const double *x, const double *y, size_t size,
 
     return 0; // sucesso
 }
+
+/* =========================================================================
+ * FORMA DA DISTRIBUIÇÃO
+ * ========================================================================= */
+
+// Momento central de ordem k (k = 2, 3 ou 4), dividido por n
+static double central_moment(const double *data, size_t size, double mean, int k) {
+    double sum = 0.0;
+    for (size_t i = 0; i < size; i++) {
+        double diff = data[i] - mean;
+        double term = diff * diff;
+        if (k >= 3) term *= diff;
+        if (k >= 4) term *= diff;
+        sum += term;
+    }
+    return sum / (double)size;
+}
+
+double cstats_skewness(const double *data, size_t size) {
+    if (!data || size < 1) {
+        return NAN;  // entrada inválida
+    }
+
+    double mean = cstats_mean(data, size);
+    double m2 = central_moment(data, size, mean, 2);
+    if (m2 == 0.0) {
+        return NAN;  // variância zero: assimetria indefinida
+    }
+
+    return central_moment(data, size, mean, 3) / pow(m2, 1.5);
+}
+
+double cstats_kurtosis(const double *data, size_t size) {
+    if (!data || size < 1) {
+        return NAN;  // entrada inválida
+    }
+
+    double mean = cstats_mean(data, size);
+    double m2 = central_moment(data, size, mean, 2);
+    if (m2 == 0.0) {
+        return NAN;  // variância zero: curtose indefinida
+    }
+
+    return central_moment(data, size, mean, 4) / (m2 * m2) - 3.0;
+}
+
+/* =========================================================================
+ * ACUMULADOR INCREMENTAL (STREAMING)
+ * ========================================================================= */
+
+void cstats_accumulator_init(cstats_accumulator *acc) {
+    if (!acc) return;
+    acc->count = 0;
+    acc->mean = 0.0;
+    acc->m2 = 0.0;
+    acc->min = (double)NAN;
+    acc->max = (double)NAN;
+}
+
+int cstats_accumulator_add(cstats_accumulator *acc, double x) {
+    if (!acc || isnan(x)) {
+        return -1;
+    }
+
+    acc->count++;
+    double delta = x - acc->mean;
+    acc->mean += delta / (double)acc->count;
+    acc->m2 += delta * (x - acc->mean);
+
+    if (acc->count == 1 || x < acc->min) acc->min = x;
+    if (acc->count == 1 || x > acc->max) acc->max = x;
+    return 0;
+}
+
+int cstats_accumulator_merge(cstats_accumulator *dst, const cstats_accumulator *src) {
+    if (!dst || !src) {
+        return -1;
+    }
+    if (src->count == 0) {
+        return 0;
+    }
+    if (dst->count == 0) {
+        *dst = *src;
+        return 0;
+    }
+
+    // Combinação de Chan et al.
+    double n_a = (double)dst->count;
+    double n_b = (double)src->count;
+    double n = n_a + n_b;
+    double delta = src->mean - dst->mean;
+
+    dst->m2 += src->m2 + delta * delta * n_a * n_b / n;
+    dst->mean += delta * n_b / n;
+    dst->count += src->count;
+    if (src->min < dst->min) dst->min = src->min;
+    if (src->max > dst->max) dst->max = src->max;
+    return 0;
+}
+
+size_t cstats_accumulator_count(const cstats_accumulator *acc) {
+    return acc ? acc->count : 0;
+}
+
+double cstats_accumulator_mean(const cstats_accumulator *acc) {
+    if (!acc || acc->count == 0) return NAN;
+    return acc->mean;
+}
+
+double cstats_accumulator_variance(const cstats_accumulator *acc) {
+    if (!acc || acc->count < 2) return NAN;
+    return acc->m2 / (double)(acc->count - 1);
+}
+
+double cstats_accumulator_pvariance(const cstats_accumulator *acc) {
+    if (!acc || acc->count == 0) return NAN;
+    return acc->m2 / (double)acc->count;
+}
+
+double cstats_accumulator_stdev(const cstats_accumulator *acc) {
+    return sqrt(cstats_accumulator_variance(acc));
+}
+
+double cstats_accumulator_min(const cstats_accumulator *acc) {
+    if (!acc || acc->count == 0) return NAN;
+    return acc->min;
+}
+
+double cstats_accumulator_max(const cstats_accumulator *acc) {
+    if (!acc || acc->count == 0) return NAN;
+    return acc->max;
+}

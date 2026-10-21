@@ -263,7 +263,7 @@ Distribuído sob a licença **MIT**. Veja o arquivo `LICENSE` para mais detalhes
 
 ## 🗺️ Roadmap e Visão de Futuro
 
-- [ ] **Curto Prazo:** Adição de funções de curtose (kurtosis) e assimetria (skewness).
+- [x] **Curto Prazo:** Adição de funções de curtose (kurtosis) e assimetria (skewness), e acumulador incremental (Welford) com `merge`.
 - [ ] **Médio Prazo:** Implementação de distribuições de probabilidade (Normal, Poisson, Binomial).
 - [ ] **Longo Prazo:** Otimização via instruções SIMD (AVX/NEON) para processamento vetorial de alta performance.
 
