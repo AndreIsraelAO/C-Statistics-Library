@@ -3,7 +3,7 @@
 [![CI](https://github.com/AndreIsraelAO/C-Statistics-Library/actions/workflows/ci.yml/badge.svg)](https://github.com/AndreIsraelAO/C-Statistics-Library/actions/workflows/ci.yml)
 **Idiomas:** [English](README.md) · Português (Brasil)
 
-Biblioteca de funções estatísticas em C11, sem dependências além da biblioteca padrão. A API é inspirada no módulo `statistics` do Python, e os resultados são conferidos contra ele nos testes. É um projeto pessoal em estágio inicial (v0.1.0); ainda **não há benchmarks** nem uso em produção.
+Biblioteca de funções estatísticas em C11, sem dependências além da biblioteca padrão. A API é inspirada no módulo `statistics` do Python, e os resultados são conferidos contra ele nos testes. É um projeto pessoal em estágio inicial (v0.1.0); há apenas um micro-benchmark (`bench/bench.c`, `-DSTATS_BUILD_BENCH=ON`) medido em uma única máquina, e nenhum uso em produção conhecido. Os números estão na [versão em inglês](README.md#benchmarks): funções que ordenam os dados (mediana, quantis, MAD) custam ~100x mais que uma passada simples (média, variância) com n = 1.000.000.
 
 ---
 

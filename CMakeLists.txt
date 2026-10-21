@@ -17,6 +17,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 # Options
 option(STATS_BUILD_TESTS "Build unit tests" ON)
 option(STATS_BUILD_SHARED "Build shared library" OFF)
+option(STATS_BUILD_BENCH "Build micro-benchmarks" OFF)
 
 # Compiler warnings (per-target helper)
 include(cmake/compiler_warnings.cmake)
@@ -99,4 +100,14 @@ if(STATS_BUILD_TESTS)
     cstats_enable_warnings(cstats_tests)
 
     add_test(NAME cstats_tests COMMAND cstats_tests)
+endif()
+
+########################
+# Benchmark section    #
+########################
+
+if(STATS_BUILD_BENCH)
+    add_executable(cstats_bench bench/bench.c)
+    target_link_libraries(cstats_bench PRIVATE cstats)
+    cstats_enable_warnings(cstats_bench)
 endif()
