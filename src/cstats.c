@@ -3,6 +3,9 @@
 #include <math.h>
 #include <stdlib.h>
 
+// NAN é float; esta versão em double evita -Wdouble-promotion
+#define CSTATS_NAN ((double)NAN)
+
 /* =========================================================================
  * MÉTRICAS BÁSICAS
  * ========================================================================= */
@@ -11,7 +14,7 @@
 double cstats_mean(const double *data, size_t size) {
     if (!data || size == 0) {
         // Retorna NaN em caso de entrada inválida
-        return NAN;
+        return CSTATS_NAN;
     }
 
     double sum = 0.0;
@@ -55,12 +58,12 @@ static double *sorted_copy(const double *data, size_t size) {
 //mode
 double cstats_mode(const double *data, size_t size) {
     if (!data || size == 0) {
-        return NAN;
+        return CSTATS_NAN;
     }
 
     double *sorted = sorted_copy(data, size);
     if (!sorted) {
-        return NAN; // NaN nos dados ou falha de alocação
+        return CSTATS_NAN; // NaN nos dados ou falha de alocação
     }
 
     // Variáveis para contagem
@@ -137,12 +140,12 @@ int cstats_multimode(const double *data, size_t size, double *modes, size_t max_
 
 double cstats_median(const double *data, size_t size) {
     if (!data || size == 0) {
-        return NAN;  // entrada inválida
+        return CSTATS_NAN;  // entrada inválida
     }
 
     double *sorted = sorted_copy(data, size);
     if (!sorted) {
-        return NAN;  // NaN nos dados ou falha de alocação
+        return CSTATS_NAN;  // NaN nos dados ou falha de alocação
     }
 
     double median;
@@ -167,14 +170,14 @@ double cstats_median(const double *data, size_t size) {
 
 double cstats_harmonic_mean(const double *data, size_t size) {
     if (!data || size == 0) {
-        return NAN;  // entrada inválida
+        return CSTATS_NAN;  // entrada inválida
     }
 
     double sum_reciprocal = 0.0;
 
     for (size_t i = 0; i < size; i++) {
         if (data[i] <= 0.0) {
-            return NAN;  // todos os elementos devem ser positivos
+            return CSTATS_NAN;  // todos os elementos devem ser positivos
         }
         sum_reciprocal += 1.0 / data[i];
     }
@@ -184,14 +187,14 @@ double cstats_harmonic_mean(const double *data, size_t size) {
 
 double cstats_geometric_mean(const double *data, size_t size) {
     if (!data || size == 0) {
-        return NAN;  // entrada inválida
+        return CSTATS_NAN;  // entrada inválida
     }
 
     double log_sum = 0.0;
 
     for (size_t i = 0; i < size; i++) {
         if (data[i] <= 0.0) {
-            return NAN;  // todos os elementos devem ser positivos
+            return CSTATS_NAN;  // todos os elementos devem ser positivos
         }
         log_sum += log(data[i]);
     }
@@ -209,12 +212,12 @@ double cstats_geometric_mean(const double *data, size_t size) {
 
 double cstats_median_low(const double *data, size_t size) {
     if (!data || size == 0) {
-        return NAN; // entrada inválida
+        return CSTATS_NAN; // entrada inválida
     }
 
     double *sorted = sorted_copy(data, size);
     if (!sorted) {
-        return NAN; // NaN nos dados ou falha de alocação
+        return CSTATS_NAN; // NaN nos dados ou falha de alocação
     }
 
     double median;
@@ -234,12 +237,12 @@ double cstats_median_low(const double *data, size_t size) {
 
 double cstats_median_high(const double *data, size_t size) {
     if (!data || size == 0) {
-        return NAN; // entrada inválida
+        return CSTATS_NAN; // entrada inválida
     }
 
     double *sorted = sorted_copy(data, size);
     if (!sorted) {
-        return NAN; // NaN nos dados ou falha de alocação
+        return CSTATS_NAN; // NaN nos dados ou falha de alocação
     }
 
     double median;
@@ -259,11 +262,11 @@ double cstats_median_high(const double *data, size_t size) {
 
 double cstats_median_grouped(const double *data, size_t size, double interval) {
     if (!data || size == 0 || !(interval > 0.0)) {
-        return NAN;  // entrada inválida
+        return CSTATS_NAN;  // entrada inválida
     }
 
     double *sorted = sorted_copy(data, size);
-    if (!sorted) return NAN;  // NaN nos dados ou falha de alocação
+    if (!sorted) return CSTATS_NAN;  // NaN nos dados ou falha de alocação
 
     // Mesmo algoritmo de statistics.median_grouped do Python
     double x = sorted[size / 2];
@@ -288,11 +291,11 @@ double cstats_median_grouped(const double *data, size_t size, double interval) {
 
 double cstats_quantile(const double *data, size_t size, double quantile) {
     if (!data || size == 0 || !(quantile >= 0.0 && quantile <= 1.0)) {
-        return NAN;  // entrada inválida
+        return CSTATS_NAN;  // entrada inválida
     }
 
     double *sorted = sorted_copy(data, size);
-    if (!sorted) return NAN;  // NaN nos dados ou falha de alocação
+    if (!sorted) return CSTATS_NAN;  // NaN nos dados ou falha de alocação
 
     double pos = quantile * (double)(size - 1);
     size_t index_lower = (size_t)floor(pos);
@@ -366,7 +369,7 @@ static double sum_sq_dev(const double *data, size_t size) {
 
 double cstats_variance(const double *data, size_t size) {
     if (!data || size < 2) {
-        return NAN;  // entrada inválida
+        return CSTATS_NAN;  // entrada inválida
     }
     return sum_sq_dev(data, size) / (double)(size - 1);
 }
@@ -375,7 +378,7 @@ double cstats_variance(const double *data, size_t size) {
 
 double cstats_pvariance(const double *data, size_t size) {
     if (!data || size < 1) {
-        return NAN;  // entrada inválida
+        return CSTATS_NAN;  // entrada inválida
     }
     return sum_sq_dev(data, size) / (double)size;
 }
@@ -400,7 +403,7 @@ double cstats_pstdev(const double *data, size_t size) {
 
  double cstats_covariance(const double *x, const double *y, size_t size) {
     if (!x || !y || size < 2) {
-        return NAN;  // entrada inválida
+        return CSTATS_NAN;  // entrada inválida
     }
 
     // Calcular médias
@@ -425,7 +428,7 @@ double cstats_pstdev(const double *data, size_t size) {
 
 double cstats_correlation(const double *x, const double *y, size_t size) {
     if (!x || !y || size < 2) {
-        return NAN;  // entrada inválida
+        return CSTATS_NAN;  // entrada inválida
     }
 
     // Calcular médias
@@ -454,7 +457,7 @@ double cstats_correlation(const double *x, const double *y, size_t size) {
     double stdev_y = sqrt(var_y_sum / (double)(size - 1));
 
     if (stdev_x == 0.0 || stdev_y == 0.0) {
-        return NAN;  // evitar divisão por zero
+        return CSTATS_NAN;  // evitar divisão por zero
     }
 
     return cov / (stdev_x * stdev_y);
@@ -550,8 +553,8 @@ int cstats_linear_regression_full(const double *x, const double *y, size_t size,
         ss_residual += res * res;
     }
 
-    if (r_squared) *r_squared = (ss_total == 0.0) ? (double)NAN : 1.0 - ss_residual / ss_total;
-    if (residual_variance) *residual_variance = (size > 2) ? ss_residual / (double)(size - 2) : (double)NAN;
+    if (r_squared) *r_squared = (ss_total == 0.0) ? CSTATS_NAN : 1.0 - ss_residual / ss_total;
+    if (residual_variance) *residual_variance = (size > 2) ? ss_residual / (double)(size - 2) : CSTATS_NAN;
 
     return 0; // sucesso
 }
@@ -575,13 +578,13 @@ static double central_moment(const double *data, size_t size, double mean, int k
 
 double cstats_skewness(const double *data, size_t size) {
     if (!data || size < 1) {
-        return NAN;  // entrada inválida
+        return CSTATS_NAN;  // entrada inválida
     }
 
     double mean = cstats_mean(data, size);
     double m2 = central_moment(data, size, mean, 2);
     if (m2 == 0.0) {
-        return NAN;  // variância zero: assimetria indefinida
+        return CSTATS_NAN;  // variância zero: assimetria indefinida
     }
 
     return central_moment(data, size, mean, 3) / pow(m2, 1.5);
@@ -589,13 +592,13 @@ double cstats_skewness(const double *data, size_t size) {
 
 double cstats_kurtosis(const double *data, size_t size) {
     if (!data || size < 1) {
-        return NAN;  // entrada inválida
+        return CSTATS_NAN;  // entrada inválida
     }
 
     double mean = cstats_mean(data, size);
     double m2 = central_moment(data, size, mean, 2);
     if (m2 == 0.0) {
-        return NAN;  // variância zero: curtose indefinida
+        return CSTATS_NAN;  // variância zero: curtose indefinida
     }
 
     return central_moment(data, size, mean, 4) / (m2 * m2) - 3.0;
@@ -607,13 +610,13 @@ double cstats_kurtosis(const double *data, size_t size) {
 
 double cstats_range(const double *data, size_t size) {
     if (!data || size == 0) {
-        return NAN;  // entrada inválida
+        return CSTATS_NAN;  // entrada inválida
     }
 
     double lo = data[0];
     double hi = data[0];
     for (size_t i = 0; i < size; i++) {
-        if (isnan(data[i])) return NAN;
+        if (isnan(data[i])) return CSTATS_NAN;
         if (data[i] < lo) lo = data[i];
         if (data[i] > hi) hi = data[i];
     }
@@ -628,12 +631,12 @@ double cstats_iqr(const double *data, size_t size) {
 double cstats_mad(const double *data, size_t size) {
     double med = cstats_median(data, size);
     if (isnan(med)) {
-        return NAN;  // entrada inválida ou NaN nos dados
+        return CSTATS_NAN;  // entrada inválida ou NaN nos dados
     }
 
     double *dev = (double*)malloc(size * sizeof(double));
     if (!dev) {
-        return NAN;  // falha de alocação
+        return CSTATS_NAN;  // falha de alocação
     }
     for (size_t i = 0; i < size; i++) {
         dev[i] = fabs(data[i] - med);
@@ -646,33 +649,33 @@ double cstats_mad(const double *data, size_t size) {
 
 double cstats_weighted_mean(const double *data, const double *weights, size_t size) {
     if (!data || !weights || size == 0) {
-        return NAN;  // entrada inválida
+        return CSTATS_NAN;  // entrada inválida
     }
 
     double weighted_sum = 0.0;
     double weight_total = 0.0;
     for (size_t i = 0; i < size; i++) {
         if (!(weights[i] >= 0.0)) {
-            return NAN;  // pesos devem ser >= 0
+            return CSTATS_NAN;  // pesos devem ser >= 0
         }
         weighted_sum += weights[i] * data[i];
         weight_total += weights[i];
     }
 
     if (!(weight_total > 0.0)) {
-        return NAN;  // soma dos pesos deve ser positiva
+        return CSTATS_NAN;  // soma dos pesos deve ser positiva
     }
     return weighted_sum / weight_total;
 }
 
 double cstats_trimmed_mean(const double *data, size_t size, double proportion) {
     if (!data || size == 0 || !(proportion >= 0.0 && proportion < 0.5)) {
-        return NAN;  // entrada inválida
+        return CSTATS_NAN;  // entrada inválida
     }
 
     double *sorted = sorted_copy(data, size);
     if (!sorted) {
-        return NAN;  // NaN nos dados ou falha de alocação
+        return CSTATS_NAN;  // NaN nos dados ou falha de alocação
     }
 
     size_t cut = (size_t)floor(proportion * (double)size);
@@ -732,15 +735,15 @@ static int average_ranks(const double *data, size_t size, double *ranks) {
 
 double cstats_spearman(const double *x, const double *y, size_t size) {
     if (!x || !y || size < 2) {
-        return NAN;  // entrada inválida
+        return CSTATS_NAN;  // entrada inválida
     }
 
     double *ranks = (double*)malloc(2 * size * sizeof(double));
     if (!ranks) {
-        return NAN;  // falha de alocação
+        return CSTATS_NAN;  // falha de alocação
     }
 
-    double result = NAN;
+    double result = CSTATS_NAN;
     if (average_ranks(x, size, ranks) == 0 &&
         average_ranks(y, size, ranks + size) == 0) {
         result = cstats_correlation(ranks, ranks + size, size);
@@ -759,7 +762,7 @@ double cstats_spearman(const double *x, const double *y, size_t size) {
 
 double cstats_normal_pdf(double x, double mu, double sigma) {
     if (!(sigma > 0.0)) {
-        return NAN;  // entrada inválida
+        return CSTATS_NAN;  // entrada inválida
     }
 
     double z = (x - mu) / sigma;
@@ -768,7 +771,7 @@ double cstats_normal_pdf(double x, double mu, double sigma) {
 
 double cstats_normal_cdf(double x, double mu, double sigma) {
     if (!(sigma > 0.0)) {
-        return NAN;  // entrada inválida
+        return CSTATS_NAN;  // entrada inválida
     }
 
     double z = (x - mu) / sigma;
@@ -777,7 +780,7 @@ double cstats_normal_cdf(double x, double mu, double sigma) {
 
 double cstats_normal_inv_cdf(double p, double mu, double sigma) {
     if (!(p > 0.0 && p < 1.0) || !(sigma > 0.0)) {
-        return NAN;  // entrada inválida
+        return CSTATS_NAN;  // entrada inválida
     }
 
     // Bisseção sobre a CDF da normal padrão (monótona); converge até a
@@ -799,7 +802,7 @@ double cstats_normal_inv_cdf(double p, double mu, double sigma) {
 
 double cstats_binomial_pmf(unsigned int k, unsigned int n, double p) {
     if (!(p >= 0.0 && p <= 1.0)) {
-        return NAN;  // entrada inválida
+        return CSTATS_NAN;  // entrada inválida
     }
     if (k > n) return 0.0;
     if (p == 0.0) return k == 0 ? 1.0 : 0.0;
@@ -813,7 +816,7 @@ double cstats_binomial_pmf(unsigned int k, unsigned int n, double p) {
 
 double cstats_binomial_cdf(unsigned int k, unsigned int n, double p) {
     if (!(p >= 0.0 && p <= 1.0)) {
-        return NAN;  // entrada inválida
+        return CSTATS_NAN;  // entrada inválida
     }
     if (k >= n) return 1.0;
 
@@ -826,7 +829,7 @@ double cstats_binomial_cdf(unsigned int k, unsigned int n, double p) {
 
 double cstats_poisson_pmf(unsigned int k, double lambda) {
     if (!(lambda >= 0.0) || isinf(lambda)) {
-        return NAN;  // entrada inválida
+        return CSTATS_NAN;  // entrada inválida
     }
     if (lambda == 0.0) return k == 0 ? 1.0 : 0.0;
 
@@ -835,7 +838,7 @@ double cstats_poisson_pmf(unsigned int k, double lambda) {
 
 double cstats_poisson_cdf(unsigned int k, double lambda) {
     if (!(lambda >= 0.0) || isinf(lambda)) {
-        return NAN;  // entrada inválida
+        return CSTATS_NAN;  // entrada inválida
     }
 
     double sum = 0.0;
@@ -855,8 +858,8 @@ void cstats_accumulator_init(cstats_accumulator *acc) {
     acc->count = 0;
     acc->mean = 0.0;
     acc->m2 = 0.0;
-    acc->min = (double)NAN;
-    acc->max = (double)NAN;
+    acc->min = CSTATS_NAN;
+    acc->max = CSTATS_NAN;
 }
 
 int cstats_accumulator_add(cstats_accumulator *acc, double x) {
@@ -905,17 +908,17 @@ size_t cstats_accumulator_count(const cstats_accumulator *acc) {
 }
 
 double cstats_accumulator_mean(const cstats_accumulator *acc) {
-    if (!acc || acc->count == 0) return NAN;
+    if (!acc || acc->count == 0) return CSTATS_NAN;
     return acc->mean;
 }
 
 double cstats_accumulator_variance(const cstats_accumulator *acc) {
-    if (!acc || acc->count < 2) return NAN;
+    if (!acc || acc->count < 2) return CSTATS_NAN;
     return acc->m2 / (double)(acc->count - 1);
 }
 
 double cstats_accumulator_pvariance(const cstats_accumulator *acc) {
-    if (!acc || acc->count == 0) return NAN;
+    if (!acc || acc->count == 0) return CSTATS_NAN;
     return acc->m2 / (double)acc->count;
 }
 
@@ -924,11 +927,11 @@ double cstats_accumulator_stdev(const cstats_accumulator *acc) {
 }
 
 double cstats_accumulator_min(const cstats_accumulator *acc) {
-    if (!acc || acc->count == 0) return NAN;
+    if (!acc || acc->count == 0) return CSTATS_NAN;
     return acc->min;
 }
 
 double cstats_accumulator_max(const cstats_accumulator *acc) {
-    if (!acc || acc->count == 0) return NAN;
+    if (!acc || acc->count == 0) return CSTATS_NAN;
     return acc->max;
 }
