@@ -24,9 +24,9 @@ jobs:
       shell: bash
       run: |
         if [ "${{ matrix.cc }}" = "msvc" ]; then
-          cmake -S . -B build -DCMAKE_C_FLAGS="/WX"
+          cmake -S . -B build -DCMAKE_COMPILE_WARNING_AS_ERROR=ON
         else
-          cmake -S . -B build -DCMAKE_C_COMPILER=${{ matrix.cc }} -DCMAKE_C_FLAGS="-Werror"
+          cmake -S . -B build -DCMAKE_C_COMPILER=${{ matrix.cc }} -DCMAKE_COMPILE_WARNING_AS_ERROR=ON
         fi
     - name: Build
       run: cmake --build build --config Release
@@ -39,7 +39,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Configure
-      run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-Werror -fsanitize=address,undefined -fno-omit-frame-pointer"
+      run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_COMPILE_WARNING_AS_ERROR=ON -DCMAKE_C_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer"
     - name: Build
       run: cmake --build build
     - name: Test

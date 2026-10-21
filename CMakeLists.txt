@@ -38,8 +38,8 @@ target_include_directories(cstats
         $<INSTALL_INTERFACE:include>
 )
 
-# libm is required for log/exp/sqrt/floor/ceil (not needed on MSVC)
-if(NOT MSVC)
+# libm is required for log/exp/sqrt/floor/ceil on UNIX-like systems (not on Windows)
+if(UNIX)
     target_link_libraries(cstats PUBLIC m)
 endif()
 

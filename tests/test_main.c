@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include "cstats.h"
 
+// NAN é float; esta versão em double evita -Wdouble-promotion
+#define DNAN ((double)NAN)
+
 static int g_checks = 0;
 static int g_failures = 0;
 
@@ -114,7 +117,7 @@ static void test_invalid_input(void) {
     CHECK_NAN(cstats_covariance(X, NULL, N));
     CHECK_NAN(cstats_quantile(X, N, -0.1));
     CHECK_NAN(cstats_quantile(X, N, 1.1));
-    CHECK_NAN(cstats_quantile(X, N, NAN));
+    CHECK_NAN(cstats_quantile(X, N, DNAN));
     CHECK_NAN(cstats_median_grouped(X, N, 0.0));
     CHECK(cstats_multimode(X, 0, NULL, 0) == -1);
 
@@ -127,7 +130,7 @@ static void test_invalid_input(void) {
 
 static void test_nan_in_data(void) {
     /* NaN nos dados não pode gerar resultado de ordenação indefinida */
-    const double d[] = {1, NAN, 3, 2};
+    const double d[] = {1, DNAN, 3, 2};
     CHECK_NAN(cstats_median(d, 4));
     CHECK_NAN(cstats_median_low(d, 4));
     CHECK_NAN(cstats_median_high(d, 4));
@@ -165,7 +168,7 @@ static void test_robust_and_weighted(void) {
     CHECK_NEAR(cstats_spearman(asc, desc, 5), -1.0);
 
     const double neg[] = {1, -1, 1};
-    const double nan_data[] = {1, NAN, 3};
+    const double nan_data[] = {1, DNAN, 3};
     const double flat[] = {2, 2, 2};
     CHECK_NAN(cstats_range(nan_data, 3));
     CHECK_NAN(cstats_range(X, 0));
@@ -244,7 +247,7 @@ static void test_accumulator(void) {
 
     /* entradas inválidas */
     CHECK(cstats_accumulator_add(NULL, 1.0) == -1);
-    CHECK(cstats_accumulator_add(&acc, NAN) == -1);
+    CHECK(cstats_accumulator_add(&acc, DNAN) == -1);
     CHECK(cstats_accumulator_count(&acc) == N);
     CHECK(cstats_accumulator_merge(NULL, &a) == -1);
 
