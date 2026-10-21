@@ -602,6 +602,251 @@ double cstats_kurtosis(const double *data, size_t size) {
 }
 
 /* =========================================================================
+ * DISPERSÃO ROBUSTA E MÉDIAS PONDERADAS/APARADAS
+ * ========================================================================= */
+
+double cstats_range(const double *data, size_t size) {
+    if (!data || size == 0) {
+        return NAN;  // entrada inválida
+    }
+
+    double lo = data[0];
+    double hi = data[0];
+    for (size_t i = 0; i < size; i++) {
+        if (isnan(data[i])) return NAN;
+        if (data[i] < lo) lo = data[i];
+        if (data[i] > hi) hi = data[i];
+    }
+    return hi - lo;
+}
+
+double cstats_iqr(const double *data, size_t size) {
+    // NaN (entrada inválida ou NaN nos dados) se propaga pela subtração
+    return cstats_quantile(data, size, 0.75) - cstats_quantile(data, size, 0.25);
+}
+
+double cstats_mad(const double *data, size_t size) {
+    double med = cstats_median(data, size);
+    if (isnan(med)) {
+        return NAN;  // entrada inválida ou NaN nos dados
+    }
+
+    double *dev = (double*)malloc(size * sizeof(double));
+    if (!dev) {
+        return NAN;  // falha de alocação
+    }
+    for (size_t i = 0; i < size; i++) {
+        dev[i] = fabs(data[i] - med);
+    }
+
+    double result = cstats_median(dev, size);
+    free(dev);
+    return result;
+}
+
+double cstats_weighted_mean(const double *data, const double *weights, size_t size) {
+    if (!data || !weights || size == 0) {
+        return NAN;  // entrada inválida
+    }
+
+    double weighted_sum = 0.0;
+    double weight_total = 0.0;
+    for (size_t i = 0; i < size; i++) {
+        if (!(weights[i] >= 0.0)) {
+            return NAN;  // pesos devem ser >= 0
+        }
+        weighted_sum += weights[i] * data[i];
+        weight_total += weights[i];
+    }
+
+    if (!(weight_total > 0.0)) {
+        return NAN;  // soma dos pesos deve ser positiva
+    }
+    return weighted_sum / weight_total;
+}
+
+double cstats_trimmed_mean(const double *data, size_t size, double proportion) {
+    if (!data || size == 0 || !(proportion >= 0.0 && proportion < 0.5)) {
+        return NAN;  // entrada inválida
+    }
+
+    double *sorted = sorted_copy(data, size);
+    if (!sorted) {
+        return NAN;  // NaN nos dados ou falha de alocação
+    }
+
+    size_t cut = (size_t)floor(proportion * (double)size);
+    size_t kept = size - 2 * cut;  // sempre > 0 pois proportion < 0.5
+
+    double sum = 0.0;
+    for (size_t i = cut; i < cut + kept; i++) {
+        sum += sorted[i];
+    }
+
+    free(sorted);
+    return sum / (double)kept;
+}
+
+typedef struct {
+    double value;
+    size_t index;
+} ranked_item;
+
+static int compare_ranked(const void *a, const void *b) {
+    double va = ((const ranked_item*)a)->value;
+    double vb = ((const ranked_item*)b)->value;
+    if (va < vb) return -1;
+    if (va > vb) return 1;
+    return 0;
+}
+
+// Postos (1..n) com média dos postos em caso de empate. Retorna 0 ou -1.
+static int average_ranks(const double *data, size_t size, double *ranks) {
+    ranked_item *items = (ranked_item*)malloc(size * sizeof(ranked_item));
+    if (!items) return -1;
+
+    for (size_t i = 0; i < size; i++) {
+        if (isnan(data[i])) {
+            free(items);
+            return -1;
+        }
+        items[i].value = data[i];
+        items[i].index = i;
+    }
+    qsort(items, size, sizeof(ranked_item), compare_ranked);
+
+    size_t i = 0;
+    while (i < size) {
+        size_t j = i;
+        while (j + 1 < size && items[j + 1].value == items[i].value) j++;
+        double rank = ((double)i + (double)j) / 2.0 + 1.0;
+        for (size_t k = i; k <= j; k++) {
+            ranks[items[k].index] = rank;
+        }
+        i = j + 1;
+    }
+
+    free(items);
+    return 0;
+}
+
+double cstats_spearman(const double *x, const double *y, size_t size) {
+    if (!x || !y || size < 2) {
+        return NAN;  // entrada inválida
+    }
+
+    double *ranks = (double*)malloc(2 * size * sizeof(double));
+    if (!ranks) {
+        return NAN;  // falha de alocação
+    }
+
+    double result = NAN;
+    if (average_ranks(x, size, ranks) == 0 &&
+        average_ranks(y, size, ranks + size) == 0) {
+        result = cstats_correlation(ranks, ranks + size, size);
+    }
+
+    free(ranks);
+    return result;
+}
+
+/* =========================================================================
+ * DISTRIBUIÇÕES DE PROBABILIDADE
+ * ========================================================================= */
+
+#define CSTATS_SQRT2 1.41421356237309504880
+#define CSTATS_PI 3.14159265358979323846
+
+double cstats_normal_pdf(double x, double mu, double sigma) {
+    if (!(sigma > 0.0)) {
+        return NAN;  // entrada inválida
+    }
+
+    double z = (x - mu) / sigma;
+    return exp(-0.5 * z * z) / (sigma * sqrt(2.0 * CSTATS_PI));
+}
+
+double cstats_normal_cdf(double x, double mu, double sigma) {
+    if (!(sigma > 0.0)) {
+        return NAN;  // entrada inválida
+    }
+
+    double z = (x - mu) / sigma;
+    return 0.5 * erfc(-z / CSTATS_SQRT2);
+}
+
+double cstats_normal_inv_cdf(double p, double mu, double sigma) {
+    if (!(p > 0.0 && p < 1.0) || !(sigma > 0.0)) {
+        return NAN;  // entrada inválida
+    }
+
+    // Bisseção sobre a CDF da normal padrão (monótona); converge até a
+    // precisão de double em poucas iterações.
+    double lo = -40.0;
+    double hi = 40.0;
+    for (int i = 0; i < 200; i++) {
+        double mid = 0.5 * (lo + hi);
+        if (mid == lo || mid == hi) break;
+        if (0.5 * erfc(-mid / CSTATS_SQRT2) < p) {
+            lo = mid;
+        } else {
+            hi = mid;
+        }
+    }
+
+    return mu + sigma * (0.5 * (lo + hi));
+}
+
+double cstats_binomial_pmf(unsigned int k, unsigned int n, double p) {
+    if (!(p >= 0.0 && p <= 1.0)) {
+        return NAN;  // entrada inválida
+    }
+    if (k > n) return 0.0;
+    if (p == 0.0) return k == 0 ? 1.0 : 0.0;
+    if (p == 1.0) return k == n ? 1.0 : 0.0;
+
+    double log_pmf = lgamma((double)n + 1.0) - lgamma((double)k + 1.0)
+                   - lgamma((double)(n - k) + 1.0)
+                   + (double)k * log(p) + (double)(n - k) * log1p(-p);
+    return exp(log_pmf);
+}
+
+double cstats_binomial_cdf(unsigned int k, unsigned int n, double p) {
+    if (!(p >= 0.0 && p <= 1.0)) {
+        return NAN;  // entrada inválida
+    }
+    if (k >= n) return 1.0;
+
+    double sum = 0.0;
+    for (unsigned int i = 0; i <= k; i++) {
+        sum += cstats_binomial_pmf(i, n, p);
+    }
+    return sum > 1.0 ? 1.0 : sum;
+}
+
+double cstats_poisson_pmf(unsigned int k, double lambda) {
+    if (!(lambda >= 0.0) || isinf(lambda)) {
+        return NAN;  // entrada inválida
+    }
+    if (lambda == 0.0) return k == 0 ? 1.0 : 0.0;
+
+    return exp((double)k * log(lambda) - lambda - lgamma((double)k + 1.0));
+}
+
+double cstats_poisson_cdf(unsigned int k, double lambda) {
+    if (!(lambda >= 0.0) || isinf(lambda)) {
+        return NAN;  // entrada inválida
+    }
+
+    double sum = 0.0;
+    for (unsigned int i = 0;; i++) {
+        sum += cstats_poisson_pmf(i, lambda);
+        if (i == k) break;
+    }
+    return sum > 1.0 ? 1.0 : sum;
+}
+
+/* =========================================================================
  * ACUMULADOR INCREMENTAL (STREAMING)
  * ========================================================================= */
 

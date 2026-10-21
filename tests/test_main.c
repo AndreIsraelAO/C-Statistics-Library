@@ -151,6 +151,68 @@ static void test_shape(void) {
     CHECK_NAN(cstats_kurtosis(X, 0));
 }
 
+static void test_robust_and_weighted(void) {
+    CHECK_NEAR(cstats_range(X, N), 5.0);
+    CHECK_NEAR(cstats_iqr(X, N), 3.0);
+    CHECK_NEAR(cstats_mad(X, N), 1.0);
+    CHECK_NEAR(cstats_weighted_mean(X, Y, N), 4.225);
+    CHECK_NEAR(cstats_trimmed_mean(X, N, 0.0), cstats_mean(X, N));
+    CHECK_NEAR(cstats_trimmed_mean(X, N, 0.2), 3.7142857142857144);
+    CHECK_NEAR(cstats_spearman(X, Y, N), 0.8836535251911142);
+
+    const double desc[] = {5, 4, 3, 2, 1};
+    const double asc[] = {1, 2, 3, 4, 5};
+    CHECK_NEAR(cstats_spearman(asc, desc, 5), -1.0);
+
+    const double neg[] = {1, -1, 1};
+    const double nan_data[] = {1, NAN, 3};
+    const double flat[] = {2, 2, 2};
+    CHECK_NAN(cstats_range(nan_data, 3));
+    CHECK_NAN(cstats_range(X, 0));
+    CHECK_NAN(cstats_iqr(nan_data, 3));
+    CHECK_NAN(cstats_mad(nan_data, 3));
+    CHECK_NAN(cstats_weighted_mean(X, neg, 3));
+    CHECK_NAN(cstats_weighted_mean(X, flat, 0));
+    const double zero_w[] = {0, 0, 0};
+    CHECK_NAN(cstats_weighted_mean(X, zero_w, 3));
+    CHECK_NAN(cstats_trimmed_mean(X, N, 0.5));
+    CHECK_NAN(cstats_trimmed_mean(X, N, -0.1));
+    CHECK_NAN(cstats_trimmed_mean(nan_data, 3, 0.1));
+    CHECK_NAN(cstats_spearman(flat, X, 3));
+    CHECK_NAN(cstats_spearman(nan_data, X, 3));
+    CHECK_NAN(cstats_spearman(X, Y, 1));
+}
+
+static void test_distributions(void) {
+    CHECK_NEAR(cstats_normal_pdf(11.0, 10.0, 2.0), 0.17603266338214976);
+    CHECK_NEAR(cstats_normal_cdf(11.0, 10.0, 2.0), 0.691462461274013);
+    CHECK_NEAR(cstats_normal_cdf(0.0, 0.0, 1.0), 0.5);
+    CHECK_NEAR(cstats_normal_inv_cdf(0.975, 10.0, 2.0), 13.919927969080106);
+    CHECK_NEAR(cstats_normal_inv_cdf(1e-10, 0.0, 1.0), -6.361340902404056);
+    CHECK_NEAR(cstats_normal_inv_cdf(0.5, 3.0, 2.0), 3.0);
+    CHECK_NAN(cstats_normal_pdf(0.0, 0.0, 0.0));
+    CHECK_NAN(cstats_normal_cdf(0.0, 0.0, -1.0));
+    CHECK_NAN(cstats_normal_inv_cdf(0.0, 0.0, 1.0));
+    CHECK_NAN(cstats_normal_inv_cdf(1.0, 0.0, 1.0));
+    CHECK_NAN(cstats_normal_inv_cdf(0.5, 0.0, 0.0));
+
+    CHECK_NEAR(cstats_binomial_pmf(3, 10, 0.3), 0.2668279319999998);
+    CHECK_NEAR(cstats_binomial_cdf(3, 10, 0.3), 0.6496107183999996);
+    CHECK_NEAR(cstats_binomial_pmf(11, 10, 0.3), 0.0);
+    CHECK_NEAR(cstats_binomial_pmf(0, 10, 0.0), 1.0);
+    CHECK_NEAR(cstats_binomial_pmf(10, 10, 1.0), 1.0);
+    CHECK_NEAR(cstats_binomial_cdf(10, 10, 0.3), 1.0);
+    CHECK_NAN(cstats_binomial_pmf(1, 10, 1.5));
+    CHECK_NAN(cstats_binomial_cdf(1, 10, -0.5));
+
+    CHECK_NEAR(cstats_poisson_pmf(3, 4.0), 0.19536681481316456);
+    CHECK_NEAR(cstats_poisson_cdf(3, 4.0), 0.4334701203667089);
+    CHECK_NEAR(cstats_poisson_pmf(0, 0.0), 1.0);
+    CHECK_NEAR(cstats_poisson_pmf(2, 0.0), 0.0);
+    CHECK_NAN(cstats_poisson_pmf(1, -1.0));
+    CHECK_NAN(cstats_poisson_cdf(1, -1.0));
+}
+
 static void test_accumulator(void) {
     cstats_accumulator acc;
     cstats_accumulator_init(&acc);
@@ -202,6 +264,8 @@ int main(void) {
     test_invalid_input();
     test_nan_in_data();
     test_shape();
+    test_robust_and_weighted();
+    test_distributions();
     test_accumulator();
 
     printf("%d checks, %d failures\n", g_checks, g_failures);
