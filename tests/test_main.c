@@ -140,6 +140,59 @@ static void test_nan_in_data(void) {
     CHECK(cstats_multimode(d, 4, modes, 2) == -1);
 }
 
+static void test_shape(void) {
+    CHECK_NEAR(cstats_skewness(X, N), -0.22113449066792545);
+    CHECK_NEAR(cstats_kurtosis(X, N), -1.3541666666666667);
+
+    const double flat[] = {4, 4, 4};
+    CHECK_NAN(cstats_skewness(flat, 3));
+    CHECK_NAN(cstats_kurtosis(flat, 3));
+    CHECK_NAN(cstats_skewness(NULL, 3));
+    CHECK_NAN(cstats_kurtosis(X, 0));
+}
+
+static void test_accumulator(void) {
+    cstats_accumulator acc;
+    cstats_accumulator_init(&acc);
+    CHECK(cstats_accumulator_count(&acc) == 0);
+    CHECK_NAN(cstats_accumulator_mean(&acc));
+    CHECK_NAN(cstats_accumulator_min(&acc));
+
+    for (size_t i = 0; i < N; i++) CHECK(cstats_accumulator_add(&acc, X[i]) == 0);
+    CHECK(cstats_accumulator_count(&acc) == N);
+    CHECK_NEAR(cstats_accumulator_mean(&acc), cstats_mean(X, N));
+    CHECK_NEAR(cstats_accumulator_variance(&acc), cstats_variance(X, N));
+    CHECK_NEAR(cstats_accumulator_pvariance(&acc), cstats_pvariance(X, N));
+    CHECK_NEAR(cstats_accumulator_stdev(&acc), cstats_stdev(X, N));
+    CHECK_NEAR(cstats_accumulator_min(&acc), 1.0);
+    CHECK_NEAR(cstats_accumulator_max(&acc), 6.0);
+
+    /* merge de duas metades == acumulador único */
+    cstats_accumulator a, b;
+    cstats_accumulator_init(&a);
+    cstats_accumulator_init(&b);
+    for (size_t i = 0; i < 4; i++) cstats_accumulator_add(&a, X[i]);
+    for (size_t i = 4; i < N; i++) cstats_accumulator_add(&b, X[i]);
+    CHECK(cstats_accumulator_merge(&a, &b) == 0);
+    CHECK(cstats_accumulator_count(&a) == N);
+    CHECK_NEAR(cstats_accumulator_mean(&a), cstats_mean(X, N));
+    CHECK_NEAR(cstats_accumulator_variance(&a), cstats_variance(X, N));
+    CHECK_NEAR(cstats_accumulator_min(&a), 1.0);
+    CHECK_NEAR(cstats_accumulator_max(&a), 6.0);
+
+    /* entradas inválidas */
+    CHECK(cstats_accumulator_add(NULL, 1.0) == -1);
+    CHECK(cstats_accumulator_add(&acc, NAN) == -1);
+    CHECK(cstats_accumulator_count(&acc) == N);
+    CHECK(cstats_accumulator_merge(NULL, &a) == -1);
+
+    cstats_accumulator one;
+    cstats_accumulator_init(&one);
+    cstats_accumulator_add(&one, 7.0);
+    CHECK_NAN(cstats_accumulator_variance(&one));
+    CHECK_NEAR(cstats_accumulator_pvariance(&one), 0.0);
+}
+
 int main(void) {
     test_central_tendency();
     test_multimode();
@@ -148,6 +201,8 @@ int main(void) {
     test_relations();
     test_invalid_input();
     test_nan_in_data();
+    test_shape();
+    test_accumulator();
 
     printf("%d checks, %d failures\n", g_checks, g_failures);
     return g_failures == 0 ? 0 : 1;

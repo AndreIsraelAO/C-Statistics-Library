@@ -238,6 +238,78 @@ CSTATS_API int cstats_linear_regression_full(const double *x, const double *y, s
                                   double *residual_variance);
 
 
+
+/* =========================================================================
+ * FORMA DA DISTRIBUIÇÃO
+ * ========================================================================= */
+
+/**
+ * Assimetria (skewness) populacional de Fisher-Pearson:
+ *   g1 = m3 / m2^(3/2), com m_k = Σ (x - mean)^k / n
+ * Requer n >= 1. Retorna NaN se a variância for zero.
+ */
+CSTATS_API double cstats_skewness(const double *data, size_t size);
+
+/**
+ * Curtose em excesso (excess kurtosis) populacional:
+ *   g2 = m4 / m2^2 - 3
+ * Uma distribuição normal tem valor 0.
+ * Requer n >= 1. Retorna NaN se a variância for zero.
+ */
+CSTATS_API double cstats_kurtosis(const double *data, size_t size);
+
+
+/* =========================================================================
+ * ACUMULADOR INCREMENTAL (STREAMING)
+ * ========================================================================= */
+
+/**
+ * Acumulador online (algoritmo de Welford): calcula contagem, média,
+ * variância, mínimo e máximo sem armazenar os dados e sem alocar memória.
+ * Estável numericamente; dois acumuladores podem ser combinados com
+ * cstats_accumulator_merge (útil para processamento paralelo).
+ *
+ * Os campos são privados: use apenas as funções abaixo.
+ */
+typedef struct cstats_accumulator {
+    size_t count;
+    double mean;
+    double m2;   /* Σ (x - mean)^2 */
+    double min;
+    double max;
+} cstats_accumulator;
+
+/** Zera o acumulador. */
+CSTATS_API void cstats_accumulator_init(cstats_accumulator *acc);
+
+/** Adiciona uma observação. Retorna 0 em sucesso, -1 se acc for NULL ou x for NaN. */
+CSTATS_API int cstats_accumulator_add(cstats_accumulator *acc, double x);
+
+/** Combina src em dst (dst passa a representar a união das observações). */
+CSTATS_API int cstats_accumulator_merge(cstats_accumulator *dst, const cstats_accumulator *src);
+
+/** Número de observações (0 se acc for NULL). */
+CSTATS_API size_t cstats_accumulator_count(const cstats_accumulator *acc);
+
+/** Média. NaN se vazio. */
+CSTATS_API double cstats_accumulator_mean(const cstats_accumulator *acc);
+
+/** Variância amostral (n - 1). NaN se count < 2. */
+CSTATS_API double cstats_accumulator_variance(const cstats_accumulator *acc);
+
+/** Variância populacional (n). NaN se vazio. */
+CSTATS_API double cstats_accumulator_pvariance(const cstats_accumulator *acc);
+
+/** Desvio padrão amostral. NaN se count < 2. */
+CSTATS_API double cstats_accumulator_stdev(const cstats_accumulator *acc);
+
+/** Mínimo. NaN se vazio. */
+CSTATS_API double cstats_accumulator_min(const cstats_accumulator *acc);
+
+/** Máximo. NaN se vazio. */
+CSTATS_API double cstats_accumulator_max(const cstats_accumulator *acc);
+
+
 #ifdef __cplusplus
 }
 #endif
