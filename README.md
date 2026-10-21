@@ -1,357 +1,129 @@
-# C-Statistics-Library: Biblioteca de Estatística Computacional em C
+# C-Statistics-Library
 
-> "Precisão matemática e eficiência algorítmica para análise de dados rigorosa em sistemas de baixo nível."
+[![CI](https://github.com/AndreIsraelAO/C-Statistics-Library/actions/workflows/ci.yml/badge.svg)](https://github.com/AndreIsraelAO/C-Statistics-Library/actions/workflows/ci.yml)
+![License](https://img.shields.io/github/license/AndreIsraelAO/C-Statistics-Library)
 
-Este projeto fornece uma implementação robusta, portável e de alto desempenho de funções estatísticas fundamentais para a linguagem C (padrão C11). Projetada para oferecer a simplicidade de bibliotecas de alto nível (como o módulo `statistics` do Python) com o determinismo e a velocidade exigidos por sistemas críticos e computação científica.
+**Languages:** English · [Português (Brasil)](README.pt-BR.md)
 
----
+A small statistics library for C11 with no dependencies beyond the C standard library. The API is modeled on Python's `statistics` module, and the test suite checks results against reference values computed with it.
 
-## 📝 Abstract (Resumo Técnico)
+> **Status:** early-stage personal project (v0.1.0). It has unit tests and CI, but **no benchmarks** and no known production use. Performance has not been measured.
 
-A **C-Statistics-Library** aborda a lacuna de ferramentas estatísticas padronizadas e leves no ecossistema da linguagem C. Enquanto linguagens como Python e R dominam a ciência de dados, aplicações em sistemas embarcados, motores de simulação e sistemas de alto desempenho (HPC) frequentemente carecem de uma API coesa para cálculos estatísticos básicos e avançados. 
+## Features
 
-Esta biblioteca implementa uma vasta gama de métricas de tendência central (médias aritmética, harmônica, geométrica, ponderada e aparada, e medianas), medidas de dispersão (variância, desvio padrão, amplitude, IQR e MAD), forma da distribuição (assimetria e curtose), análise de quantis, correlação (Pearson e Spearman), regressão linear simples, distribuições de probabilidade (Normal, Binomial e Poisson) e um acumulador incremental (Welford) para dados em fluxo. A metodologia prioriza a estabilidade numérica e a segurança de memória, utilizando o padrão C11 e CMake para garantir portabilidade entre arquiteturas. Os resultados demonstram uma solução altamente modular, facilitando a integração como biblioteca estática ou compartilhada em projetos de pesquisa e produção.
+| Area | Functions |
+| :--- | :--- |
+| Central tendency | `mean`, `mode`, `multimode`, `median`, `median_low`, `median_high`, `median_grouped` |
+| Other means | `harmonic_mean`, `geometric_mean`, `weighted_mean`, `trimmed_mean` |
+| Quantiles | `quantile`, `quantiles` (linear interpolation, same as Python's `inclusive` method) |
+| Dispersion | `variance`, `pvariance`, `stdev`, `pstdev`, `range`, `iqr`, `mad` |
+| Shape | `skewness`, `kurtosis` (population moments; kurtosis is excess kurtosis) |
+| Relationships | `covariance`, `correlation` (Pearson), `spearman` |
+| Regression | `linear_regression`, `linear_regression_full` (slope, intercept, R², residual variance) |
+| Distributions | Normal (`pdf`, `cdf`, `inv_cdf`), Binomial and Poisson (`pmf`, `cdf`) |
+| Streaming | `cstats_accumulator`: Welford's algorithm for count, mean, variance, min and max, with `merge` to combine partial results; no heap allocation |
 
----
+All functions are prefixed with `cstats_`. The full, documented API is in [`include/cstats.h`](include/cstats.h).
 
-## 🛡️ Badges Abrangentes
-
-![Top Language](https://img.shields.io/github/languages/top/AndreIsraelAO/C-Statistics-Library?style=for-the-badge)
-![License](https://img.shields.io/github/license/AndreIsraelAO/C-Statistics-Library?style=for-the-badge)
-![Issues](https://img.shields.io/github/issues/AndreIsraelAO/C-Statistics-Library?style=for-the-badge)
-![Pull Requests](https://img.shields.io/github/issues-pr/AndreIsraelAO/C-Statistics-Library?style=for-the-badge)
-![Last Commit](https://img.shields.io/github/last-commit/AndreIsraelAO/C-Statistics-Library?style=for-the-badge)
-![Repo Size](https://img.shields.io/github/repo-size/AndreIsraelAO/C-Statistics-Library?style=for-the-badge)
-
----
-
-## 🗺️ Sumário (Table of Contents)
-
-- [Introdução e Motivação](#introdução-e-motivação)
-- [Arquitetura do Sistema](#arquitetura-do-sistema)
-- [Decisões de Design Chave](#decisões-de-design-chave)
-- [✨ Funcionalidades Detalhadas](#-funcionalidades-detalhadas)
-- [🛠️ Tech Stack Detalhado](#️-tech-stack-detalhado)
-- [📂 Estrutura Detalhada do Código-Fonte](#-estrutura-detalhada-do-código-fonte)
-- [📋 Pré-requisitos Avançados](#-pré-requisitos-avançados)
-- [🚀 Guia de Instalação e Configuração](#-guia-de-instalação-e-configuração)
-- [⚙️ Uso Avançado e Exemplos](#️-uso-avançado-e-exemplos)
-- [🔧 API Reference](#-api-reference)
-- [🧪 Estratégia de Testes e Qualidade](#-estratégia-de-testes-e-qualidade)
-- [🚢 Deployment e Escalabilidade](#-deployment-e-escalabilidade)
-- [🤝 Contribuição](#-contribuição)
-- [📜 Licença e Aspectos Legais](#-licença-e-aspectos-legais)
-- [👥 Equipe Principal](#-equipe-principal)
-- [🗺️ Roadmap e Visão de Futuro](#️-roadmap-e-visão-de-futuro)
-- [❓ FAQ](#-faq)
-- [📞 Contato e Suporte](#-contato-e-suporte)
-
----
-
-## Introdução e Motivação
-
-O desenvolvimento de software moderno em C muitas vezes exige o processamento estatístico de fluxos de dados em tempo real. No entanto, desenvolvedores frequentemente se veem obrigados a reimplementar funções básicas como `mean` ou `stdev`, o que aumenta o risco de erros numéricos e inconsistências algorítmicas (especialmente em casos de borda como arrays vazios ou valores negativos em médias geométricas).
-
-A **C-Statistics-Library** foi motivada pela necessidade de uma "Standard Library de Estatística" para C. Ela se diferencia por:
-1.  **Rigor Matemático:** Tratamento explícito de `NaN` e erros de domínio.
-2.  **Versatilidade:** Suporte a múltiplas variantes de mediana (low, high, grouped) e regressão linear completa.
-3.  **Facilidade de Integração:** Um sistema de build baseado em CMake que suporta exportação de alvos para projetos externos.
-
----
-
-## Arquitetura do Sistema
-
-A biblioteca segue uma arquitetura modular e desacoplada, separando a definição da interface pública (`.h`) da implementação lógica (`.c`).
-
-```mermaid
-graph TD
-    User["👤 Desenvolvedor/App"] --> API["Header: cstats.h (Interface Estável)"]
-    subgraph "C-Statistics-Library Core"
-        API --> Core["Implementação: cstats.c"]
-        Core --> Basic["Métricas Básicas (Mean, Mode, Median)"]
-        Core --> Advanced["Estatística Avançada (Quantis, Variância, Forma)"]
-        Core --> Relation["Relações (Covariância, Correlação, Regressão)"]
-        Core --> Dist["Distribuições (Normal, Binomial, Poisson)"]
-        Core --> Stream["Streaming (Acumulador de Welford)"]
-        Core --> Utils["Auxiliares (Sort, Math Lib)"]
-    end
-    Core --> LibC["Standard C Library (math.h, stdlib.h)"]
-    
-    style User fill:#f9f,stroke:#333,stroke-width:2px
-    style API fill:#00d2ff,stroke:#333,stroke-width:2px
-    style Core fill:#3a7bd5,stroke:#fff,stroke-width:2px,color:#fff
-    style LibC fill:#eee,stroke:#333,stroke-dasharray: 5 5
-```
-
-### Justificativa Arquitetural
-A escolha de um design funcional (sem estado interno) garante que a biblioteca seja **thread-safe** por natureza, permitindo que múltiplas threads processem diferentes datasets simultaneamente sem necessidade de mutexes globais.
-
----
-
-## Decisões de Design Chave
-
-1.  **Padrão C11:** Escolhido para garantir compatibilidade moderna mantendo a máxima portabilidade em compiladores GCC, Clang e MSVC.
-2.  **Precisão `double`:** Todos os cálculos utilizam ponto flutuante de precisão dupla para minimizar erros de arredondamento em somatórios extensos.
-3.  **Tratamento de Dados:** Funções que exigem ordenação (como mediana e moda) realizam uma cópia temporária (`malloc`) dos dados para preservar o array original do usuário, seguindo o princípio da não-mutabilidade inesperada.
-4.  **Independência de Posição (fPIC):** Habilitado via CMake para permitir que a biblioteca seja facilmente vinculada a wrappers de linguagens de alto nível, como Cython ou JNI.
-5.  **Política de erros:** Funções que retornam `double` devolvem `NAN` para entrada inválida (ponteiro `NULL`, tamanho insuficiente, parâmetro fora do domínio) ou falha de alocação. Funções que retornam `int` devolvem `-1` em erro e `0` em sucesso.
-6.  **Política de NaN nos dados:** Funções que dependem de ordenação (mediana, moda, `multimode`, quantis, `median_grouped`, MAD, média aparada, Spearman) devolvem `NAN` (ou `-1`) se houver `NaN` nos dados, pois a ordenação não seria bem definida. Funções de soma simples (média, variância) propagam o `NaN` pelo padrão IEEE 754.
-7.  **Exportação de símbolos:** Toda a API pública usa a macro `CSTATS_API`, de modo que a biblioteca compartilhada funciona também em DLLs do Windows (MSVC e MinGW).
-
----
-
-## ✨ Funcionalidades Detalhadas
-
-### 📈 Tendência Central
-*   **Média Aritmética:** Cálculo clássico com proteção contra divisão por zero.
-*   **Médias Especializadas:** Harmônica e Geométrica (implementada via log-sum para evitar overflow).
-*   **Moda e Multimoda:** Identificação do valor mais frequente ou de todos os picos de frequência em distribuições multimodais.
-*   **Medianas Variadas:** Inclui mediana padrão, baixa, alta e a **mediana agrupada**, que segue o algoritmo de `statistics.median_grouped` do Python.
-*   **Média Ponderada e Aparada:** `cstats_weighted_mean` e `cstats_trimmed_mean`, para dados com pesos ou com valores extremos.
-
-### 📉 Dispersão e Distribuição
-*   **Variância e Desvio Padrão:** Versões Amostral (Bessel's correction) e Populacional.
-*   **Dispersão Robusta:** Amplitude, intervalo interquartil (IQR) e desvio absoluto mediano (MAD).
-*   **Quantis Arbitrários:** Cálculo de qualquer percentil entre 0.0 e 1.0, essencial para análise de quartis (Q1, Q2, Q3).
-*   **Forma da Distribuição:** Assimetria (skewness) e curtose em excesso (kurtosis), nas formas populacionais.
-
-### 🎲 Distribuições de Probabilidade
-*   **Normal:** densidade (`pdf`), acumulada (`cdf`) e inversa (`inv_cdf`).
-*   **Binomial e Poisson:** função de massa (`pmf`) e acumulada (`cdf`), calculadas em escala logarítmica para estabilidade numérica.
-
-### 🔍 Relações e Predição
-*   **Covariância e Correlação:** Pearson (relação linear) e Spearman (relação monotônica, por postos, com média de postos em empates).
-*   **Regressão Linear Simples:** Cálculo de inclinação (slope) e intercepto.
-*   **Análise de Regressão Completa:** Fornece adicionalmente o $R^2$ (coeficiente de determinação) e a variância residual (`NaN` quando n = 2).
-
-### 🌊 Processamento em Fluxo (Streaming)
-*   **Acumulador de Welford:** `cstats_accumulator` calcula contagem, média, variância, desvio padrão, mínimo e máximo de forma online, sem alocar memória e sem guardar os dados.
-*   **Combinação de acumuladores:** `cstats_accumulator_merge` une dois acumuladores (algoritmo de Chan), útil para processar partes de um dataset em paralelo.
-
----
-
-## 🛠️ Tech Stack Detalhado
-
-| Categoria | Tecnologia | Propósito | Justificativa |
-| :--- | :--- | :--- | :--- |
-| **Linguagem** | C11 | Core Engine | Equilíbrio entre performance bruta e recursos modernos. |
-| **Build System** | CMake 3.16+ | Automação | Padrão de indústria para portabilidade e gestão de dependências. |
-| **CI/CD** | GitHub Actions | Testes Automatizados | Matriz Linux (GCC, Clang), macOS (Clang) e Windows (MSVC) com `-Werror`, mais um job com AddressSanitizer e UBSan. |
-| **Compiler** | GCC / Clang / MSVC | Compilação | Warnings rigorosos aplicados apenas ao target da biblioteca (`-Wall -Wextra -Wconversion ...` ou `/W4`). |
-
----
-
-## 📂 Estrutura Detalhada do Código-Fonte
-
-```text
-C-Statistics-Library/
-├── .github/workflows/   # Configurações de Integração Contínua (CI)
-├── cmake/               # Módulos auxiliares do CMake (função cstats_enable_warnings)
-├── include/             # Headers públicos (.h) - A API da biblioteca
-│   └── cstats.h         # Definições de protótipos, macro CSTATS_API e documentação da API
-├── src/                 # Implementação lógica (.c)
-│   └── cstats.c         # Núcleo algorítmico das funções estatísticas
-├── tests/               # Suíte de testes
-│   └── test_main.c      # Runner com asserts, valores de referência do Python e casos de borda
-├── CMakeLists.txt       # Script principal de configuração do build
-├── .gitignore           # Ignora artefatos de build
-└── LICENSE              # Termos de uso (MIT)
-```
-
----
-
-## 📋 Pré-requisitos Avançados
-
-*   **Compilador C:** GCC 7+, Clang 10+ ou MSVC 2019+.
-*   **CMake:** Versão 3.16 ou superior.
-*   **Biblioteca Padrão:** Requer `math.h` (libm, linkada automaticamente pelo CMake fora do MSVC) e `stdlib.h`. As distribuições usam `erfc`, `lgamma` e `log1p` (C99).
-
----
-
-## 🚀 Guia de Instalação e Configuração
-
-### 1. Clonagem do Repositório
-```bash
-git clone https://github.com/AndreIsraelAO/C-Statistics-Library.git
-cd C-Statistics-Library
-```
-
-### 2. Compilação (Build)
-Utilizamos o fluxo padrão do CMake para gerar os artefatos:
-```bash
-mkdir build && cd build
-cmake .. -DSTATS_BUILD_TESTS=ON
-cmake --build .
-```
-
-Opções disponíveis: `-DSTATS_BUILD_TESTS=ON|OFF` (padrão ON) e `-DSTATS_BUILD_SHARED=ON|OFF` (padrão OFF).
-
-### 3. Instalação no Sistema
-Para instalar os headers e a biblioteca em diretórios padrão (`/usr/local` no Linux):
-```bash
-sudo cmake --install .
-```
-
-### 4. Uso em outro projeto CMake
-Depois de instalada, a biblioteca pode ser encontrada com `find_package`:
-```cmake
-find_package(cstats REQUIRED)
-target_link_libraries(meu_app PRIVATE cstats::cstats)
-```
-
----
-
-## ⚙️ Uso Avançado e Exemplos
-
-Abaixo, um exemplo de como realizar uma análise de regressão linear completa:
-
-```c
-#include <stdio.h>
-#include <cstats.h>
-
-int main() {
-    double x[] = {1.0, 2.0, 3.0, 4.0, 5.0};
-    double y[] = {2.1, 3.9, 6.2, 8.1, 10.5};
-    size_t n = 5;
-
-    double slope, intercept, r_squared, var_res;
-
-    if (cstats_linear_regression_full(x, y, n, &slope, &intercept, &r_squared, &var_res) == 0) {
-        printf("Modelo: y = %.2fx + %.2f\n", slope, intercept);
-        printf("Precisão (R²): %.4f\n", r_squared);
-        printf("Variância Residual: %.4f\n", var_res);
-    }
-
-    return 0;
-}
-```
-
-Processamento em fluxo, com combinação de acumuladores (por exemplo, um por thread):
+## Quick start
 
 ```c
 #include <stdio.h>
 #include <cstats.h>
 
 int main(void) {
-    cstats_accumulator a, b;
-    cstats_accumulator_init(&a);
-    cstats_accumulator_init(&b);
+    double x[] = {1.0, 2.0, 3.0, 4.0, 5.0};
+    double y[] = {2.1, 3.9, 6.2, 8.1, 10.5};
+    double slope, intercept, r_squared, residual_var;
 
-    for (int i = 1; i <= 50; i++)   cstats_accumulator_add(&a, i);
-    for (int i = 51; i <= 100; i++) cstats_accumulator_add(&b, i);
+    printf("mean = %.2f, stdev = %.4f\n", cstats_mean(x, 5), cstats_stdev(x, 5));
 
-    cstats_accumulator_merge(&a, &b);  // a passa a conter as 100 observações
-    printf("n=%zu média=%.2f desvio=%.4f min=%.0f max=%.0f\n",
-           cstats_accumulator_count(&a), cstats_accumulator_mean(&a),
-           cstats_accumulator_stdev(&a), cstats_accumulator_min(&a),
-           cstats_accumulator_max(&a));
+    if (cstats_linear_regression_full(x, y, 5, &slope, &intercept,
+                                      &r_squared, &residual_var) == 0) {
+        printf("y = %.2fx + %.2f  (R² = %.4f)\n", slope, intercept, r_squared);
+    }
     return 0;
 }
 ```
 
-Distribuições de probabilidade:
+Streaming statistics without storing the data:
 
 ```c
-double p = cstats_normal_cdf(11.0, 10.0, 2.0);       // P(X <= 11), X ~ N(10, 2²)
-double z = cstats_normal_inv_cdf(0.975, 0.0, 1.0);   // ≈ 1.96
-double b = cstats_binomial_pmf(3, 10, 0.3);          // P(X = 3), X ~ Bin(10, 0.3)
-double q = cstats_poisson_cdf(3, 4.0);               // P(X <= 3), X ~ Poisson(4)
+cstats_accumulator acc;
+cstats_accumulator_init(&acc);
+for (int i = 1; i <= 100; i++) cstats_accumulator_add(&acc, i);
+printf("n=%zu mean=%.2f stdev=%.4f\n", cstats_accumulator_count(&acc),
+       cstats_accumulator_mean(&acc), cstats_accumulator_stdev(&acc));
 ```
 
----
+## Build and install
 
-## 🔧 API Reference
+Requires a C11 compiler (GCC, Clang or MSVC) and CMake 3.16+.
 
-Todas as funções estão declaradas em `include/cstats.h`, com a documentação completa de cada parâmetro. Funções `double` devolvem `NAN` em entrada inválida; funções `int` devolvem `-1` em erro e `0` em sucesso.
+```bash
+cmake -S . -B build
+cmake --build build
+ctest --test-dir build --output-on-failure
+cmake --install build          # may need sudo
+```
 
-| Categoria | Funções |
-| :--- | :--- |
-| **Tendência central** | `cstats_mean`, `cstats_mode`, `cstats_multimode`, `cstats_median`, `cstats_median_low`, `cstats_median_high`, `cstats_median_grouped` |
-| **Médias especiais** | `cstats_harmonic_mean`, `cstats_geometric_mean`, `cstats_weighted_mean`, `cstats_trimmed_mean` |
-| **Quantis** | `cstats_quantile`, `cstats_quantiles` |
-| **Dispersão** | `cstats_variance`, `cstats_pvariance`, `cstats_stdev`, `cstats_pstdev`, `cstats_range`, `cstats_iqr`, `cstats_mad` |
-| **Forma** | `cstats_skewness`, `cstats_kurtosis` |
-| **Relações** | `cstats_covariance`, `cstats_correlation`, `cstats_spearman` |
-| **Regressão** | `cstats_linear_regression`, `cstats_linear_regression_full` |
-| **Normal** | `cstats_normal_pdf`, `cstats_normal_cdf`, `cstats_normal_inv_cdf` |
-| **Binomial / Poisson** | `cstats_binomial_pmf`, `cstats_binomial_cdf`, `cstats_poisson_pmf`, `cstats_poisson_cdf` |
-| **Streaming** | `cstats_accumulator_init`, `_add`, `_merge`, `_count`, `_mean`, `_variance`, `_pvariance`, `_stdev`, `_min`, `_max` |
+Options: `-DSTATS_BUILD_TESTS=ON|OFF` (default ON) and `-DSTATS_BUILD_SHARED=ON|OFF` (default OFF).
 
-Detalhes que costumam gerar dúvidas:
+Using it from another CMake project after installing:
 
-*   `cstats_multimode` devolve o **total** de modas encontradas, mesmo que não caibam em `modes` (como o `snprintf`); apenas as primeiras `max_modes` são gravadas.
-*   `cstats_median_grouped(data, size, interval)` equivale a `statistics.median_grouped` do Python.
-*   `cstats_skewness` e `cstats_kurtosis` usam os momentos populacionais (divisão por `n`); a curtose é em excesso (normal = 0).
-*   `cstats_linear_regression_full` aceita ponteiros de saída `NULL` e devolve `NaN` na variância residual quando `size == 2`.
+```cmake
+find_package(cstats REQUIRED)
+target_link_libraries(my_app PRIVATE cstats::cstats)
+```
 
----
+## Error handling
 
-## 🧪 Estratégia de Testes e Qualidade
+- Functions returning `double` return `NAN` on invalid input (`NULL` pointer, too few samples, parameter outside its domain) or when memory allocation fails.
+- Functions returning `int` return `0` on success and `-1` on error.
+- `cstats_multimode` returns the **total** number of modes (like `snprintf`); only the first `max_modes` are written.
+- **NaN in the data:** functions that sort (median, mode, multimode, quantiles, grouped median, MAD, trimmed mean, Spearman) return `NAN`/`-1`, because ordering with NaN is undefined. Plain accumulations (mean, variance, covariance) propagate NaN per IEEE 754. `cstats_accumulator_add` rejects NaN without changing its state.
+- `cstats_linear_regression_full` returns a `NAN` residual variance when `size == 2`.
 
-*   **Testes Unitários:** `tests/test_main.c` é um runner com asserts (sem dependências externas) que retorna código diferente de zero se algum check falhar. Os valores esperados foram gerados com o módulo `statistics` do Python (`math` e `NormalDist` para as distribuições).
-*   **Casos de borda cobertos:** ponteiros `NULL`, `size` 0 e 1, `NaN` nos dados, valores não positivos nas médias harmônica e geométrica, `x` constante na regressão, `n = 2` na variância residual, buffer pequeno no `multimode`, parâmetros fora do domínio nas distribuições, e equivalência entre o acumulador (inclusive após `merge`) e as funções em lote.
-*   **CI:** O arquivo `.github/workflows/ci.yml` roda em cada Push ou PR: build com `-Werror` em Linux (GCC e Clang), macOS (Clang) e Windows (MSVC), execução do `ctest`, e um job separado com AddressSanitizer e UBSan.
-*   **Execução Manual de Testes:**
-    ```bash
-    ctest --test-dir build --output-on-failure
-    ```
+## Design notes
 
----
+- No global state: functions can be called from several threads on different data. This has not been verified with ThreadSanitizer.
+- Functions that need ordering copy the input (`malloc`) and sort the copy with `qsort`, so the caller's array is never modified. They are O(n log n) and allocate. For streaming or allocation-free use, use the accumulator.
+- Sums are plain `double` accumulation, without compensated (Kahan) summation.
+- The public API is annotated with `CSTATS_API`, so the shared library exports symbols on Windows.
 
-## 🚢 Deployment e Escalabilidade
+## Testing and CI
 
-*   **Biblioteca Estática vs Compartilhada:** O CMake permite alternar via `-DSTATS_BUILD_SHARED=ON/OFF`. Bibliotecas estáticas são preferíveis para sistemas embarcados, enquanto compartilhadas são ideais para integração com Python/R.
-*   **Escalabilidade:** Os algoritmos de ordenação utilizam `qsort` ($O(n \log n)$), garantindo performance aceitável mesmo para datasets de milhões de registros. Para dados em fluxo ou memória limitada, prefira o acumulador de Welford, que é $O(1)$ em memória.
-*   **Windows:** a macro `CSTATS_API` cuida do `dllexport`/`dllimport`; o CMake define `CSTATS_BUILDING_DLL` ao compilar a DLL e `CSTATS_STATIC` para a versão estática.
+- `tests/test_main.c` is a dependency-free test runner (150 checks). Expected values come from Python's `statistics`, `math` and `NormalDist`.
+- Edge cases covered: `NULL` and empty input, single samples, NaN in data, non-positive values in harmonic/geometric means, constant `x` in regression, `size == 2` residual variance, a too-small `multimode` buffer, out-of-domain distribution parameters, and agreement between the accumulator (including after `merge`) and the batch functions.
+- GitHub Actions builds with warnings as errors (`-Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion`, or `/W4` on MSVC) on Linux (GCC, Clang), macOS (Clang) and Windows (MSVC), and runs one job under AddressSanitizer and UBSan.
+- Locally verified with GCC (MinGW) and Clang on Windows; `find_package(cstats)` was checked with a separate consumer project.
 
----
+## Known limitations and roadmap
 
-## 🤝 Contribuição
+- No hypothesis tests (t-test, chi-square, Kolmogorov–Smirnov) or confidence intervals yet; they need the incomplete gamma/beta functions and the Student's t distribution.
+- Median and quantiles sort the whole array; a selection algorithm (quickselect) would make them O(n).
+- Error causes are not distinguishable (`NAN` covers invalid input and allocation failure).
+- Only `double` is supported.
+- Planned: histograms and moving averages, `zscore`, compensated summation, benchmarks, Python bindings.
 
-Contribuições são o que tornam a comunidade open source um lugar incrível para aprender, inspirar e criar.
+## Project layout
 
-1.  Faça um **Fork** do projeto.
-2.  Crie sua **Feature Branch** (`git checkout -b feature/InovacaoEstatistica`).
-3.  Siga as **Convenções de Commit** (ex: `feat: adiciona teste de Kolmogorov-Smirnov`).
-4.  Abra um **Pull Request** via [GitHub PRs](https://github.com/AndreIsraelAO/C-Statistics-Library/pulls).
+```text
+include/cstats.h        public API and documentation
+src/cstats.c            implementation
+tests/test_main.c       test runner
+cmake/                  warning flags helper
+.github/workflows/      CI
+```
 
-Para bugs e sugestões, utilize a seção de [Issues](https://github.com/AndreIsraelAO/C-Statistics-Library/issues).
+## Contributing
 
----
+Issues and pull requests are welcome. Please add a test with a reference value (ideally from Python's `statistics`) for any new function, and make sure the CI is green.
 
-## 📜 Licença e Aspectos Legais
+## License
 
-Distribuído sob a licença **MIT**. Veja o arquivo `LICENSE` para mais detalhes. Esta licença permissiva permite o uso comercial, modificação e distribuição, desde que mantidos os créditos originais.
+MIT. See [LICENSE](LICENSE).
 
----
+## Author
 
-## 👥 Equipe Principal
-
-*   **Andre Israel** - *Arquiteto e Desenvolvedor Principal* - [GitHub](https://github.com/AndreIsraelAO)
-
----
-
-## 🗺️ Roadmap e Visão de Futuro
-
-- [x] **Concluído:** curtose e assimetria, acumulador de Welford com `merge`, amplitude/IQR/MAD, médias ponderada e aparada, correlação de Spearman, distribuições Normal, Binomial e Poisson (pdf/pmf, cdf e inversa da Normal).
-- [ ] **Próximo:** testes de hipótese (t de Student, qui-quadrado, Kolmogorov-Smirnov) e intervalos de confiança — exigem as funções gama/beta incompletas e a distribuição t.
-- [ ] **Próximo:** histogramas/bins, médias móveis (SMA/EMA) e `zscore`.
-- [ ] **Qualidade:** erros distinguíveis (`enum cstats_status`), seleção em O(n) (quickselect) para mediana/quantis, soma compensada (Kahan) e variantes `float`/`long double`.
-- [ ] **Longo Prazo:** otimização via instruções SIMD (AVX/NEON), benchmarks, bindings Python (Cython/cffi) e documentação gerada com Doxygen.
-
----
-
-## ❓ FAQ
-
-**Q: A biblioteca lida com valores ausentes (NULL)?**
-R: A biblioteca espera arrays de `double`; não há suporte a "valores ausentes" além do `NAN`. Funções de soma simples (média, variância, covariância) propagam o `NAN` conforme o IEEE 754. Funções que ordenam os dados (mediana, moda, quantis, MAD, média aparada, Spearman...) devolvem `NAN` (ou `-1`) se houver `NAN` na entrada. No acumulador, `cstats_accumulator_add` rejeita `NAN` com retorno `-1`, sem alterar o estado.
-
-**Q: É seguro usar em sistemas de tempo real?**
-R: Sim, as funções são determinísticas. No entanto, funções que exigem ordenação (como a mediana) alocam memória dinamicamente de forma temporária. Para sistemas *hard real-time*, recomenda-se evitar essas funções e usar o acumulador de Welford (`cstats_accumulator`), que não aloca memória.
-
----
-
-## 📞 Contato e Suporte
-
-*   **Reportar Bugs:** [GitHub Issues](https://github.com/AndreIsraelAO/C-Statistics-Library/issues)
-*   **Discussões Técnicas:** Utilize a aba "Discussions" no repositório (se habilitada) ou entre em contato via perfil do GitHub.
+Andre Israel — [@AndreIsraelAO](https://github.com/AndreIsraelAO)
