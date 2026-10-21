@@ -1,0 +1,13 @@
+build/
+build-*/
+*.o
+*.obj
+*.a
+*.so
+*.dll
+*.exe
+*.dylib
+CMakeCache.txt
+CMakeFiles/
+/test_cstats
+.vscode/

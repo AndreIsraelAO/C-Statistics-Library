@@ -1,5 +1,18 @@
-#ifndef CSTATISTICS_STATISTICS_H
-#define CSTATISTICS_STATISTICS_H
+#ifndef CSTATS_H
+#define CSTATS_H
+
+/* Macro de exportação de símbolos (necessária para DLLs no Windows) */
+#if defined(_WIN32) && !defined(CSTATS_STATIC)
+#  ifdef CSTATS_BUILDING_DLL
+#    define CSTATS_API __declspec(dllexport)
+#  else
+#    define CSTATS_API __declspec(dllimport)
+#  endif
+#elif defined(__GNUC__)
+#  define CSTATS_API __attribute__((visibility("default")))
+#else
+#  define CSTATS_API
+#endif
 
 /**
  * CStatisticsLibrary — Biblioteca de Estatística em C
@@ -26,14 +39,14 @@ extern "C" {
  * Calcula a média aritmética.
  * Retorna NaN se size == 0.
  */
-double cstats_mean(const double *data, size_t size);
+CSTATS_API double cstats_mean(const double *data, size_t size);
 
 /**
  * Calcula a moda (valor mais frequente).
  * Se houver múltiplas modas, retorna a primeira em ordem crescente.
  * Retorna NaN se size == 0.
  */
-double cstats_mode(const double *data, size_t size);
+CSTATS_API double cstats_mode(const double *data, size_t size);
 
 /**
  * Calcula todas as modas (multimode) de um array.
@@ -45,14 +58,14 @@ double cstats_mode(const double *data, size_t size);
  *
  * return Número de modas encontradas, ou -1 em caso de erro (size==0)
  */
-int cstats_multimode(const double *data, size_t size, double *modes, size_t max_modes);
+CSTATS_API int cstats_multimode(const double *data, size_t size, double *modes, size_t max_modes);
 
 
 /**
  * Calcula a mediana.
  * Retorna NaN se size == 0.
  */
-double cstats_median(const double *data, size_t size);
+CSTATS_API double cstats_median(const double *data, size_t size);
 
 
 /* =========================================================================
@@ -65,7 +78,7 @@ double cstats_median(const double *data, size_t size);
  * Requer que todos os elementos sejam > 0.
  * Retorna NaN se algum valor for <= 0.
  */
-double cstats_harmonic_mean(const double *data, size_t size);
+CSTATS_API double cstats_harmonic_mean(const double *data, size_t size);
 
 /**
  * Média geométrica:
@@ -73,7 +86,7 @@ double cstats_harmonic_mean(const double *data, size_t size);
  * Requer que todos os elementos sejam > 0.
  * Retorna NaN se algum valor for <= 0.
  */
-double cstats_geometric_mean(const double *data, size_t size);
+CSTATS_API double cstats_geometric_mean(const double *data, size_t size);
 
 
 /* =========================================================================
@@ -85,14 +98,14 @@ double cstats_geometric_mean(const double *data, size_t size);
  * Em caso de número par de elementos, retorna o valor inferior do par central.
  * Ex.: [1, 2, 3, 4] → median_low = 2
  */
-double cstats_median_low(const double *data, size_t size);
+CSTATS_API double cstats_median_low(const double *data, size_t size);
 
 /**
  * Mediana alta:
  * Em caso de número par de elementos, retorna o valor superior do par central.
  * Ex.: [1, 2, 3, 4] → median_high = 3
  */
-double cstats_median_high(const double *data, size_t size);
+CSTATS_API double cstats_median_high(const double *data, size_t size);
 
 /**
  * Mediana agrupada (grouped median).
@@ -102,7 +115,7 @@ double cstats_median_high(const double *data, size_t size);
  * interval define o tamanho do grupo (ex.: 1.0 para números inteiros).
  * Retorna NaN em caso de size == 0.
  */
-double cstats_median_grouped(const double *data, size_t size,
+CSTATS_API double cstats_median_grouped(const double *data, size_t size,
                              double interval);
 
 /* =========================================================================
@@ -121,7 +134,7 @@ double cstats_median_grouped(const double *data, size_t size,
  *
  * Retorna NaN se size == 0 ou se quantile estiver fora dos limites.
  */
-double cstats_quantile(const double *data, size_t size, double quantile);
+CSTATS_API double cstats_quantile(const double *data, size_t size, double quantile);
 
 /**
  * Atalho para múltiplos quantis ao mesmo tempo.
@@ -132,7 +145,7 @@ double cstats_quantile(const double *data, size_t size, double quantile);
  * 
  * Retorna 0 em sucesso, -1 em erro.
  */
-int cstats_quantiles(const double *data, size_t size,
+CSTATS_API int cstats_quantiles(const double *data, size_t size,
                      const double *q, size_t q_count,
                      double *result);
 
@@ -146,26 +159,26 @@ int cstats_quantiles(const double *data, size_t size,
  * Formula: Σ (x - mean)^2 / (n - 1)
  * Requer n >= 2. Retorna NaN caso contrário.
  */
-double cstats_variance(const double *data, size_t size);
+CSTATS_API double cstats_variance(const double *data, size_t size);
 
 /**
  * Variância populacional.
  * Formula: Σ (x - mean)^2 / n
  * Requer n >= 1.
  */
-double cstats_pvariance(const double *data, size_t size);
+CSTATS_API double cstats_pvariance(const double *data, size_t size);
 
 /**
  * Desvio padrão amostral (sample standard deviation).
  * Igual a sqrt(variance).
  */
-double cstats_stdev(const double *data, size_t size);
+CSTATS_API double cstats_stdev(const double *data, size_t size);
 
 /**
  * Desvio padrão populacional.
  * Igual a sqrt(pvariance).
  */
-double cstats_pstdev(const double *data, size_t size);
+CSTATS_API double cstats_pstdev(const double *data, size_t size);
 
 
 /* =========================================================================
@@ -177,14 +190,14 @@ double cstats_pstdev(const double *data, size_t size);
  * Formula: Σ (xi - mean_x)*(yi - mean_y) / (n - 1)
  * Requer n >= 2.
  */
-double cstats_covariance(const double *x, const double *y, size_t size);
+CSTATS_API double cstats_covariance(const double *x, const double *y, size_t size);
 
 /**
  * Correlação de Pearson entre dois vetores.
  * Formula: cov(x, y) / (stdev(x) * stdev(y))
  * Retorna NaN se variâncias forem zero.
  */
-double cstats_correlation(const double *x, const double *y, size_t size);
+CSTATS_API double cstats_correlation(const double *x, const double *y, size_t size);
 
 
 /* =========================================================================
@@ -201,7 +214,7 @@ double cstats_correlation(const double *x, const double *y, size_t size);
  * Exige size >= 2.
  * Retorna 0 em sucesso, -1 em erro.
  */
-int cstats_linear_regression(const double *x, const double *y, size_t size,
+CSTATS_API int cstats_linear_regression(const double *x, const double *y, size_t size,
                              double *slope, double *intercept);
 
 /**
@@ -218,7 +231,7 @@ int cstats_linear_regression(const double *x, const double *y, size_t size,
  *
  * Retorna 0 em sucesso, -1 em erro.
  */
-int cstats_linear_regression_full(const double *x, const double *y, size_t size,
+CSTATS_API int cstats_linear_regression_full(const double *x, const double *y, size_t size,
                                   double *slope,
                                   double *intercept,
                                   double *r_squared,
@@ -229,4 +242,4 @@ int cstats_linear_regression_full(const double *x, const double *y, size_t size,
 }
 #endif
 
-#endif // CSTATISTICS_STATISTICS_H
+#endif /* CSTATS_H */

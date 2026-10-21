@@ -8,12 +8,39 @@ on:
 
 jobs:
   build:
+    name: ${{ matrix.os }} / ${{ matrix.cc }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest,  cc: gcc }
+          - { os: ubuntu-latest,  cc: clang }
+          - { os: macos-latest,   cc: clang }
+          - { os: windows-latest, cc: msvc }
+    steps:
+    - uses: actions/checkout@v4
+    - name: Configure
+      shell: bash
+      run: |
+        if [ "${{ matrix.cc }}" = "msvc" ]; then
+          cmake -S . -B build -DCMAKE_C_FLAGS="/WX"
+        else
+          cmake -S . -B build -DCMAKE_C_COMPILER=${{ matrix.cc }} -DCMAKE_C_FLAGS="-Werror"
+        fi
+    - name: Build
+      run: cmake --build build --config Release
+    - name: Test
+      run: ctest --test-dir build -C Release --output-on-failure
+
+  sanitizers:
+    name: ASan + UBSan
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
     - name: Configure
-      run: cmake -S . -B build
+      run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-Werror -fsanitize=address,undefined -fno-omit-frame-pointer"
     - name: Build
-      run: cmake --build build -- -j 2
+      run: cmake --build build
     - name: Test
       run: ctest --test-dir build --output-on-failure
