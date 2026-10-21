@@ -260,6 +260,68 @@ CSTATS_API double cstats_kurtosis(const double *data, size_t size);
 
 
 /* =========================================================================
+ * DISPERSÃO ROBUSTA E MÉDIAS PONDERADAS/APARADAS
+ * ========================================================================= */
+
+/** Amplitude (max - min). NaN se size == 0 ou houver NaN nos dados. */
+CSTATS_API double cstats_range(const double *data, size_t size);
+
+/** Intervalo interquartil: quantil(0.75) - quantil(0.25). */
+CSTATS_API double cstats_iqr(const double *data, size_t size);
+
+/**
+ * Desvio absoluto mediano (MAD): mediana de |x - mediana(x)|.
+ * Retorna NaN se size == 0, se houver NaN ou se a alocação falhar.
+ */
+CSTATS_API double cstats_mad(const double *data, size_t size);
+
+/**
+ * Média ponderada: Σ w_i*x_i / Σ w_i.
+ * Os pesos devem ser >= 0 e somar mais que zero; caso contrário, NaN.
+ */
+CSTATS_API double cstats_weighted_mean(const double *data, const double *weights, size_t size);
+
+/**
+ * Média aparada: descarta floor(proportion * n) valores de cada extremo
+ * e calcula a média do restante.
+ * proportion ∈ [0.0, 0.5). Retorna NaN em entrada inválida.
+ */
+CSTATS_API double cstats_trimmed_mean(const double *data, size_t size, double proportion);
+
+/**
+ * Correlação de postos de Spearman (empates recebem o posto médio).
+ * Requer n >= 2. Retorna NaN se houver NaN ou se algum vetor for constante.
+ */
+CSTATS_API double cstats_spearman(const double *x, const double *y, size_t size);
+
+
+/* =========================================================================
+ * DISTRIBUIÇÕES DE PROBABILIDADE
+ * ========================================================================= */
+
+/** Normal: densidade de probabilidade. Requer sigma > 0, senão NaN. */
+CSTATS_API double cstats_normal_pdf(double x, double mu, double sigma);
+
+/** Normal: função de distribuição acumulada P(X <= x). Requer sigma > 0. */
+CSTATS_API double cstats_normal_cdf(double x, double mu, double sigma);
+
+/** Normal: inversa da CDF (quantil). Requer p ∈ (0, 1) e sigma > 0, senão NaN. */
+CSTATS_API double cstats_normal_inv_cdf(double p, double mu, double sigma);
+
+/** Binomial(n, p): P(X = k). Requer p ∈ [0, 1]; NaN caso contrário. 0 se k > n. */
+CSTATS_API double cstats_binomial_pmf(unsigned int k, unsigned int n, double p);
+
+/** Binomial(n, p): P(X <= k). */
+CSTATS_API double cstats_binomial_cdf(unsigned int k, unsigned int n, double p);
+
+/** Poisson(lambda): P(X = k). Requer lambda >= 0; NaN caso contrário. */
+CSTATS_API double cstats_poisson_pmf(unsigned int k, double lambda);
+
+/** Poisson(lambda): P(X <= k). */
+CSTATS_API double cstats_poisson_cdf(unsigned int k, double lambda);
+
+
+/* =========================================================================
  * ACUMULADOR INCREMENTAL (STREAMING)
  * ========================================================================= */
 
